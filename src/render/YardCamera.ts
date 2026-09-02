@@ -1,4 +1,8 @@
 import * as THREE from 'three'
+import type { YardView } from '../sim/yard'
+
+/** What a yard gets framed at when it does not ask for anything else. */
+export const DEFAULT_VIEW: YardView = { centre: { x: -20, z: -14 }, distance: 150 }
 
 /**
  * Looks down on the yard from behind and above. It rides with the shunter by
@@ -6,16 +10,18 @@ import * as THREE from 'three'
  */
 export class YardCamera {
   readonly camera: THREE.PerspectiveCamera
-  private target = new THREE.Vector3(-20, 0, -14)
+  private target: THREE.Vector3
   private azimuth = Math.PI / 2
   private elevation = 0.78
-  private distance = 150
+  private distance: number
   private dragging: 'orbit' | 'pan' | null = null
   private last = { x: 0, y: 0 }
   follow = true
 
-  constructor(canvas: HTMLCanvasElement) {
-    this.camera = new THREE.PerspectiveCamera(48, 1, 0.5, 900)
+  constructor(canvas: HTMLCanvasElement, view: YardView = DEFAULT_VIEW) {
+    this.target = new THREE.Vector3(view.centre.x, 0, view.centre.z)
+    this.distance = view.distance
+    this.camera = new THREE.PerspectiveCamera(48, 1, 0.5, view.distance * 6)
 
     canvas.addEventListener('contextmenu', (e) => e.preventDefault())
     canvas.addEventListener('pointerdown', (e) => {
@@ -48,7 +54,8 @@ export class YardCamera {
       'wheel',
       (e) => {
         e.preventDefault()
-        this.distance = Math.max(18, Math.min(260, this.distance * (1 + Math.sign(e.deltaY) * 0.12)))
+        const far = view.distance * 1.75
+        this.distance = Math.max(18, Math.min(far, this.distance * (1 + Math.sign(e.deltaY) * 0.12)))
       },
       { passive: false },
     )

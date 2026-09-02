@@ -5,7 +5,7 @@ import { TUNING } from '../sim/tuning'
 import { buildSwitchMarkers, buildTrack, type SwitchMarker } from './TrackView'
 import { buildHighlight, buildPin, buildVehicle } from './VehicleView'
 import { buildRoadSigns } from './RoadSigns'
-import { YardCamera } from './YardCamera'
+import { DEFAULT_VIEW, YardCamera } from './YardCamera'
 
 const LAMP_STRAIGHT = 0x2f6ad0
 const LAMP_DIVERGE = 0xd8a417
@@ -24,22 +24,26 @@ export class Renderer {
     this.renderer.setPixelRatio(Math.min(devicePixelRatio, 2))
     this.renderer.shadowMap.enabled = true
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap
-    this.view = new YardCamera(canvas)
+    const view = world.yard.view ?? DEFAULT_VIEW
+    this.view = new YardCamera(canvas, view)
 
+    // Haze and shadows are pegged to how far back the yard wants to be seen,
+    // so a big yard does not vanish into the murk.
     this.scene.background = new THREE.Color(0x9fb4c4)
-    this.scene.fog = new THREE.Fog(0x9fb4c4, 180, 620)
+    this.scene.fog = new THREE.Fog(0x9fb4c4, view.distance * 1.2, view.distance * 4.13)
 
     const sun = new THREE.DirectionalLight(0xfff2dd, 2.1)
     sun.position.set(-60, 90, 40)
     sun.castShadow = true
     sun.shadow.mapSize.set(2048, 2048)
+    const span = Math.max(140, view.distance * 0.95)
     const s = sun.shadow.camera
-    s.left = -140
-    s.right = 140
-    s.top = 140
-    s.bottom = -140
+    s.left = -span
+    s.right = span
+    s.top = span
+    s.bottom = -span
     s.near = 1
-    s.far = 320
+    s.far = Math.max(320, view.distance * 2.2)
     this.scene.add(sun)
     this.scene.add(new THREE.HemisphereLight(0xbfd6e8, 0x54603f, 1.0))
 

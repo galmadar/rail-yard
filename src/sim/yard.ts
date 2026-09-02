@@ -1,4 +1,4 @@
-import type { Polyline } from './geometry'
+import type { Polyline, Vec2 } from './geometry'
 import { poseAt, type Pose } from './geometry'
 
 export type NodeId = string
@@ -56,11 +56,18 @@ export interface SignPost {
   at: number
 }
 
+/** How wide a yard wants to be seen. A big yard needs the camera further back. */
+export interface YardView {
+  centre: Vec2
+  distance: number
+}
+
 export interface Yard {
   nodes: Map<NodeId, YardNode>
   edges: Map<EdgeId, Edge>
   switchOrder: NodeId[]
   signs: SignPost[]
+  view?: YardView
 }
 
 export function edge(y: Yard, id: EdgeId): Edge {
