@@ -1,8 +1,7 @@
 import { join, sCurve, straight } from '../../sim/geometry'
 import type { Edge, Yard, YardNode } from '../../sim/yard'
-import type { Train } from '../../sim/train'
-import type { World, Job } from '../../sim/World'
-import { loco, wagon } from '../../sim/vehicles'
+import type { World } from '../../sim/World'
+import { MARSDEN_JOBS } from '../jobs/marsden'
 
 /**
  * Marsden Yard. A headshunt at the west end, three sidings fanning south-east
@@ -122,41 +121,14 @@ function buildYard(): Yard {
   }
 }
 
-const SHUNTER = loco('shunter', 'the shunter')
-const TANKER = wagon('tanker', 'the tanker', '#3f7fb8')
-const HOPPER = wagon('hopper', 'the coal hopper', '#4d7a44')
-const VAN = wagon('van', 'the box van', '#a8443a')
-
-function standing(id: string, cars: typeof SHUNTER[], edge: string, head: number): Train {
+export function createWorld(jobIndex = 0): World {
+  const setup = MARSDEN_JOBS[Math.max(0, Math.min(MARSDEN_JOBS.length - 1, jobIndex))]
   return {
-    id,
-    cars: cars.map((vehicle) => ({ vehicle, reversed: false })),
-    path: [{ edge, forward: true }],
-    head,
-    speed: 0,
-  }
-}
-
-export const SORTING_JOB: Job = {
-  title: 'Sort the yard',
-  goals: [
-    { vehicleId: 'van', edgeId: 'goods-road', text: 'the box van goes on the goods road' },
-    { vehicleId: 'tanker', edgeId: 'oil-road', text: 'the tanker goes on the oil road' },
-    { vehicleId: 'hopper', edgeId: 'coal-road', text: 'the coal hopper goes on the coal road' },
-  ],
-}
-
-export function createWorld(): World {
-  const yard = buildYard()
-  return {
-    yard,
-    trains: [
-      standing('player', [SHUNTER], 'headshunt', 55),
-      standing('cut-tanker', [TANKER], 'goods-road', 95),
-      standing('cut-hopper', [HOPPER], 'oil-road', 85),
-      standing('cut-van', [VAN], 'spare', 34),
-    ],
-    job: SORTING_JOB,
+    yard: buildYard(),
+    trains: setup.layout(),
+    job: setup.job,
+    jobIndex: MARSDEN_JOBS.indexOf(setup),
+    jobCount: MARSDEN_JOBS.length,
     time: 0,
     notice: null,
     cutAt: 1,

@@ -1,5 +1,4 @@
-import { carEdge } from '../sim/train'
-import { lockedSwitches, playerTrain, type World } from '../sim/World'
+import { goalsMet, lockedSwitches, playerTrain, type World } from '../sim/World'
 
 function el(tag: string, cls: string, parent: HTMLElement): HTMLElement {
   const node = document.createElement(tag)
@@ -10,6 +9,8 @@ function el(tag: string, cls: string, parent: HTMLElement): HTMLElement {
 
 /** Everything the driver needs to see, and nothing about the code underneath. */
 export class Hud {
+  private layer: HTMLElement
+  private step: HTMLElement
   private job: HTMLElement
   private goals: HTMLElement
   private readout: HTMLElement
@@ -18,35 +19,41 @@ export class Hud {
   private done: HTMLElement
 
   constructor(root: HTMLElement) {
-    const panel = el('div', 'panel job-panel', root)
+    // Its own layer, so swapping jobs can take the whole panel away in one go.
+    this.layer = el('div', 'hud-layer', root)
+
+    const panel = el('div', 'panel job-panel', this.layer)
+    this.step = el('div', 'job-step', panel)
     this.job = el('h1', 'job-title', panel)
     this.goals = el('ul', 'goals', panel)
 
-    const bottom = el('div', 'panel readout-panel', root)
+    const bottom = el('div', 'panel readout-panel', this.layer)
     this.readout = el('div', 'readout', bottom)
     this.points = el('div', 'points', bottom)
 
-    this.notice = el('div', 'notice', root)
-    this.done = el('div', 'done', root)
+    this.notice = el('div', 'notice', this.layer)
+    this.done = el('div', 'banner', this.layer)
+  }
+
+  destroy(): void {
+    this.layer.remove()
   }
 
   update(world: World): void {
+    this.step.textContent = `Job ${world.jobIndex + 1} of ${world.jobCount}`
     this.job.textContent = world.job.title
 
     this.goals.innerHTML = ''
-    const player = playerTrain(world)
-    for (const goal of world.job.goals) {
-      let placed = false
+    const met = goalsMet(world)
+    world.job.goals.forEach((goal, g) => {
       let colour = '#888'
       for (const t of world.trains) {
-        const i = t.cars.findIndex((c) => c.vehicle.id === goal.vehicleId)
-        if (i < 0) continue
-        colour = t.cars[i].vehicle.colour
-        if (t !== player && carEdge(world.yard, t, i) === goal.edgeId) placed = true
+        const car = t.cars.find((c) => c.vehicle.id === goal.vehicleId)
+        if (car) colour = car.vehicle.colour
       }
 
       const row = document.createElement('li')
-      row.className = placed ? 'goal done' : 'goal'
+      row.className = met[g] ? 'goal done' : 'goal'
 
       const swatch = document.createElement('span')
       swatch.className = 'swatch'
@@ -59,11 +66,11 @@ export class Hud {
 
       const tick = document.createElement('span')
       tick.className = 'tick'
-      tick.textContent = placed ? '✔' : ''
+      tick.textContent = met[g] ? '✔' : ''
       row.appendChild(tick)
 
       this.goals.appendChild(row)
-    }
+    })
 
     const t = playerTrain(world)
     if (t) {
@@ -74,8 +81,10 @@ export class Hud {
       const behind = t.cars.length - 1
       const cut = behind === 0 ? 'nothing on the hook' : `${behind} on the hook`
       const at = Math.max(1, Math.min(Math.max(1, t.cars.length - 1), world.cutAt))
-      const dropping = t.cars.length - at
-      const pin = behind === 0 ? '' : ` · U drops the back ${dropping}`
+      // The shunter can be on either end, so count the wagons it leaves behind.
+      const locoAt = t.cars.findIndex((c) => c.vehicle.kind === 'loco')
+      const dropping = locoAt < at ? t.cars.length - at : at
+      const pin = behind === 0 ? '' : ` · U drops ${dropping}`
       this.readout.textContent =
         `${Math.abs(t.speed).toFixed(1)} m/s ${way} · ${cut}${pin}`
     }
@@ -99,7 +108,12 @@ export class Hud {
       this.notice.className = 'notice'
     }
 
-    this.done.className = world.done ? 'done show' : 'done'
-    if (world.done) this.done.textContent = 'Yard sorted. Nice work.'
+    this.done.className = world.done ? 'banner show' : 'banner'
+    if (world.done) {
+      this.done.textContent =
+        world.jobIndex + 1 < world.jobCount
+          ? 'Job done. Press N for the next one.'
+          : "That's the lot. Press N to start again."
+    }
   }
 }
