@@ -12,6 +12,11 @@ export const TUNING = {
   braking: 16,
   /** Bleed-off when you let go of everything. */
   drag: 3,
+  /**
+   * How quickly a cut with nobody driving it runs down, m/s^2. Real wagons roll
+   * for half a mile; this stops one inside a siding so a kick is a fair shot.
+   */
+  rollingResistance: 0.6,
   /** Buffer up faster than this and you get told off. */
   safeCouplingSpeed: 5,
 } as const

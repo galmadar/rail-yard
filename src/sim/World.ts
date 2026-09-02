@@ -84,6 +84,24 @@ function dist(a: { x: number; z: number }, b: { x: number; z: number }): number 
 }
 
 /**
+ * How fast `t` is gaining on the thing it is running at. Zero or less means
+ * they are not really meeting - two halves of a cut that parted at the same
+ * speed would otherwise hook straight back on.
+ */
+function closingSpeed(
+  t: Train,
+  ours: { heading: number },
+  other: Train,
+  theirs: { heading: number },
+): number {
+  const way = Math.sign(t.speed)
+  const ux = Math.cos(ours.heading) * way
+  const uz = Math.sin(ours.heading) * way
+  const along = other.speed * (Math.cos(theirs.heading) * ux + Math.sin(theirs.heading) * uz)
+  return Math.abs(t.speed) - along
+}
+
+/**
  * Buffer up to a standing cut and you are hooked on. Which way round the other
  * cut is decides how its wagons slot into the new train.
  */
@@ -101,6 +119,9 @@ function tryCouple(w: World, t: Train, movingForward: boolean): boolean {
     if (near > TUNING.couplingReach) continue
 
     const metTheirFront = dFront <= dBack
+    const closing = closingSpeed(t, ourEnd, other, metTheirFront ? oFront : oBack)
+    if (closing <= 0) continue
+
     const theirCars = metTheirFront ? reverseCars(other.cars) : other.cars
     const otherLen = trainLength(other)
 
@@ -114,13 +135,18 @@ function tryCouple(w: World, t: Train, movingForward: boolean): boolean {
     ensureCovered(y, t)
     w.trains = w.trains.filter((x) => x !== other)
 
-    const rough = Math.abs(t.speed) > TUNING.safeCouplingSpeed
+    const rough = closing > TUNING.safeCouplingSpeed
     t.speed = 0
-    say(
-      w,
-      rough ? 'coupled - but that was a thump' : 'coupled up',
-      rough ? 'warn' : 'good',
-    )
+    // Nothing of the player's in it, so it is news rather than a jolt they felt.
+    if (!hasLoco(t)) {
+      say(w, 'the loose wagons buffered up')
+    } else {
+      say(
+        w,
+        rough ? 'coupled - but that was a thump' : 'coupled up',
+        rough ? 'warn' : 'good',
+      )
+    }
     return true
   }
   return false
@@ -133,16 +159,13 @@ export function uncouple(w: World): void {
     say(w, 'nothing to cut off', 'warn')
     return
   }
-  if (Math.abs(t.speed) > 0.15) {
-    say(w, 'stand still before you pull the pin', 'warn')
-    return
-  }
   const index = Math.max(1, Math.min(t.cars.length - 1, w.cutAt))
   const rear = split(w.yard, t, index, `cut-${nextTrainId++}`)
   if (!rear) return
   w.trains.push(rear)
   w.cutAt = Math.max(1, Math.min(t.cars.length - 1, w.cutAt))
-  say(w, `cut off ${rear.cars.length} behind`, 'good')
+  const rolling = Math.abs(rear.speed) > 0
+  say(w, `cut off ${rear.cars.length} behind${rolling ? ' - still rolling' : ''}`, 'good')
 }
 
 export function moveCut(w: World, delta: number): void {
@@ -151,9 +174,18 @@ export function moveCut(w: World, delta: number): void {
   w.cutAt = Math.max(1, Math.min(Math.max(1, t.cars.length - 1), w.cutAt + delta))
 }
 
-function reportBlock(w: World, blocked: Blocked): void {
-  if (blocked === 'buffer') say(w, 'buffer stop', 'warn')
-  else if (blocked === 'switch-against') say(w, 'the points are set against you', 'warn')
+/**
+ * Being stopped only happens on a tick where something was moving, and a cut
+ * that is stopped stays stopped, so a loose cut says its piece exactly once.
+ */
+function reportBlock(w: World, blocked: Blocked, driven: boolean): void {
+  if (blocked === 'buffer') {
+    if (driven) say(w, 'buffer stop', 'warn')
+    else say(w, 'the loose wagons ran into the buffer stop')
+  } else if (blocked === 'switch-against') {
+    if (driven) say(w, 'the points are set against you', 'warn')
+    else say(w, 'the loose wagons stopped at the points')
+  }
 }
 
 export function checkJob(w: World): boolean {
@@ -173,11 +205,7 @@ export function checkJob(w: World): boolean {
   return true
 }
 
-export function tick(w: World, dt: number, controls: Controls): void {
-  w.time += dt
-  const t = playerTrain(w)
-  if (!t) return
-
+function drive(t: Train, dt: number, controls: Controls): void {
   // Forward always means the way the shunter's nose points, whichever way round
   // it ended up in the cut.
   const locoCar = t.cars.find((c) => c.vehicle.kind === 'loco')
@@ -193,18 +221,41 @@ export function tick(w: World, dt: number, controls: Controls): void {
     const drop = TUNING.drag * dt
     t.speed = Math.abs(t.speed) <= drop ? 0 : t.speed - Math.sign(t.speed) * drop
   }
+}
 
+/** Nobody is holding the brake on a loose cut - it just runs down and stands. */
+function coast(t: Train, dt: number): void {
+  const drop = TUNING.rollingResistance * dt
+  t.speed = Math.abs(t.speed) <= drop ? 0 : t.speed - Math.sign(t.speed) * drop
+}
+
+function advance(w: World, t: Train, dt: number): void {
   if (t.speed === 0) return
-  const before = t.speed
+  const forward = t.speed > 0
   const { blocked } = roll(w.yard, t, t.speed * dt)
   if (blocked) {
     t.speed = 0
-    reportBlock(w, blocked)
+    reportBlock(w, blocked, hasLoco(t))
     return
   }
-  if (tryCouple(w, t, before > 0)) {
-    w.cutAt = Math.max(1, Math.min(t.cars.length - 1, w.cutAt))
+  tryCouple(w, t, forward)
+}
+
+export function tick(w: World, dt: number, controls: Controls): void {
+  w.time += dt
+  const driven = playerTrain(w)
+  if (driven) drive(driven, dt, controls)
+
+  // Coupling swallows a train mid-loop, so work off a copy and skip the eaten.
+  for (const t of [...w.trains]) {
+    if (!w.trains.includes(t)) continue
+    if (!hasLoco(t)) coast(t, dt)
+    advance(w, t, dt)
   }
+
+  // The loco may have ended the tick inside a different train than it started in.
+  const player = playerTrain(w)
+  if (player) w.cutAt = Math.max(1, Math.min(player.cars.length - 1, w.cutAt))
 
   if (!w.done && checkJob(w)) {
     w.done = true
