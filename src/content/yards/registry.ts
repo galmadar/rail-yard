@@ -1,19 +1,20 @@
 import type { World } from '../../sim/World'
-import { createWorld as createSmallYard } from './smallYard'
+import { MARSDEN_JOBS } from '../jobs/marsden'
 import { createLoopWorld } from './loopYard'
+import { createWorld as createMarsden } from './smallYard'
 
-export interface YardEntry {
-  id: string
-  name: string
+export interface Booking {
+  yard: string
   create: () => World
 }
 
-/** Every yard you can be sent to work. */
-export const YARDS: YardEntry[] = [
-  { id: 'marsden', name: 'Marsden Yard', create: createSmallYard },
-  { id: 'halton', name: 'Halton Loop', create: createLoopWorld },
+/** Every job you can be sent, in the order you get them. */
+export const ROSTER: Booking[] = [
+  ...MARSDEN_JOBS.map((_, i) => ({ yard: 'Marsden Yard', create: () => createMarsden(i) })),
+  { yard: 'Halton Loop', create: createLoopWorld },
 ]
 
-export function yardById(id: string): YardEntry {
-  return YARDS.find((y) => y.id === id) ?? YARDS[0]
+export function bookingAt(index: number): Booking {
+  const n = ROSTER.length
+  return ROSTER[((index % n) + n) % n]
 }

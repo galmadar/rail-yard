@@ -1,4 +1,4 @@
-import { createWorld } from './content/yards/smallYard'
+import { ROSTER, bookingAt } from './content/yards/registry'
 import { start, type Game } from './shell/GameLoop'
 
 const hudRoot = document.getElementById('hud') as HTMLElement
@@ -25,7 +25,9 @@ function freshCanvas(): HTMLCanvasElement {
 
 function play(index: number): void {
   game?.stop()
-  const world = createWorld(index)
+  const world = bookingAt(index).create()
+  world.jobIndex = index
+  world.jobCount = ROSTER.length
 
   // Dev only: lets a test driver read the yard state without a screenshot.
   if (import.meta.env.DEV) (globalThis as Record<string, unknown>).world = world

@@ -173,6 +173,8 @@ export function createLoopWorld(): World {
       standing('cut', [ORE, CRATE_VAN, TIMBER], 'yard-west', 34),
     ],
     job: RUNAROUND_JOB,
+    jobIndex: 0,
+    jobCount: 1,
     time: 0,
     notice: null,
     cutAt: 1,
