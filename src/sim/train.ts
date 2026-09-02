@@ -214,7 +214,8 @@ export function reverseCars(cars: Car[]): Car[] {
 
 /**
  * Cut the train in two at the coupling in front of car `index`.
- * The front part keeps rolling; the cut-off part stands still.
+ * Both halves carry on at the speed they were doing - pulling the pin takes
+ * nothing away from the wagons behind it.
  */
 export function split(y: Yard, t: Train, index: number, newId: string): Train | null {
   if (index <= 0 || index >= t.cars.length) return null
@@ -228,7 +229,7 @@ export function split(y: Yard, t: Train, index: number, newId: string): Train | 
     cars: rear,
     path: [...t.path],
     head: t.head - frontLen - TUNING.couplingGap,
-    speed: 0,
+    speed: t.speed,
   }
   t.cars = front
   trim(y, t)
