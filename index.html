@@ -21,6 +21,7 @@
       #view { display: block; width: 100vw; height: 100vh; }
 
       #hud { position: fixed; inset: 0; pointer-events: none; }
+      .hud-layer { position: absolute; inset: 0; }
       .panel {
         position: absolute;
         background: var(--panel);
@@ -31,7 +32,13 @@
       }
 
       .job-panel { top: 20px; left: 20px; min-width: 280px; }
-      .job-title { margin: 0 0 10px; font-size: 17px; letter-spacing: 0.3px; }
+      .job-step {
+        color: var(--dim);
+        font-size: 12px;
+        letter-spacing: 0.9px;
+        text-transform: uppercase;
+      }
+      .job-title { margin: 2px 0 10px; font-size: 17px; letter-spacing: 0.3px; }
       .goals { margin: 0; padding: 0; list-style: none; }
       .goal {
         color: var(--dim);
@@ -88,7 +95,8 @@
       .notice.warn { color: #ffcf7a; }
       .notice.good { color: #8fd694; }
 
-      .done {
+      /* Its own name, not .done - a ticked goal row carries that class too. */
+      .banner {
         position: absolute;
         left: 50%;
         top: 42%;
@@ -101,7 +109,7 @@
         opacity: 0;
         transition: opacity 0.4s, transform 0.4s;
       }
-      .done.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+      .banner.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 
       #help {
         position: fixed;
@@ -130,6 +138,8 @@
       <b>Q</b> / <b>E</b> — move the pin along the train<br />
       <b>U</b> — pull the pin, cut off<br />
       <b>F</b> — park the camera<br />
+      <b>N</b> — next job<br />
+      <b>R</b> — start this job again<br />
       drag to look · wheel to zoom
     </div>
     <script type="module" src="/src/main.ts"></script>

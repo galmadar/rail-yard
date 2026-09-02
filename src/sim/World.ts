@@ -2,6 +2,7 @@ import { TUNING } from './tuning'
 import {
   backPose,
   carEdge,
+  carSpan,
   ensureCovered,
   frontPose,
   hasLoco,
@@ -18,6 +19,10 @@ import { throwSwitch, type NodeId, type Yard } from './yard'
 export interface Goal {
   vehicleId: string
   edgeId: string
+  /** Where in the line it stands: 1 nearest the dead end, 2 behind it, and so on. */
+  order?: number
+  /** Nothing may be coupled to it - how the shunter finishes on its own. */
+  alone?: boolean
   /** How the job sheet words it. */
   text: string
 }
@@ -43,6 +48,9 @@ export interface World {
   yard: Yard
   trains: Train[]
   job: Job
+  /** Which job of the set this is, and how many there are in it. */
+  jobIndex: number
+  jobCount: number
   time: number
   notice: Notice | null
   /** Which coupling the player has picked out, counted back from the front. */
@@ -156,21 +164,60 @@ function reportBlock(w: World, blocked: Blocked): void {
   else if (blocked === 'switch-against') say(w, 'the points are set against you', 'warn')
 }
 
-export function checkJob(w: World): boolean {
+/** How far a car stands from the dead end of its own road - what "behind" means. */
+function fromStop(y: Yard, t: Train, i: number): number {
+  const span = carSpan(t, i)
+  let remaining = (span.front + span.back) / 2
+  for (const step of t.path) {
+    const road = y.edges.get(step.edge)
+    const len = road ? road.line.length : 0
+    if (remaining <= len) {
+      const at = step.forward ? remaining : len - remaining
+      return road && y.nodes.get(road.to)?.kind === 'buffer' ? len - at : at
+    }
+    remaining -= len
+  }
+  return 0
+}
+
+/** One flag per goal, in the order the job sheet lists them. */
+export function goalsMet(w: World): boolean[] {
   const y = w.yard
   const player = playerTrain(w)
-  for (const goal of w.job.goals) {
-    let placed = false
+  const met = w.job.goals.map(() => false)
+  const spot = new Map<number, number>()
+
+  w.job.goals.forEach((goal, g) => {
     for (const t of w.trains) {
       const i = t.cars.findIndex((c) => c.vehicle.id === goal.vehicleId)
       if (i < 0) continue
       // Still hooked to the loco means still in your hands, not delivered.
-      if (t === player) return false
-      if (carEdge(y, t, i) === goal.edgeId) placed = true
+      if (t === player && !goal.alone) return
+      if (goal.alone && t.cars.length !== 1) return
+      if (carEdge(y, t, i) !== goal.edgeId) return
+      met[g] = true
+      spot.set(g, fromStop(y, t, i))
+      return
     }
-    if (!placed) return false
+  })
+
+  // Goals that share a road and carry a number have to stand in that sequence.
+  const roads = new Map<string, number[]>()
+  w.job.goals.forEach((goal, g) => {
+    if (goal.order === undefined) return
+    roads.set(goal.edgeId, [...(roads.get(goal.edgeId) ?? []), g])
+  })
+  for (const line of roads.values()) {
+    if (!line.every((g) => met[g])) continue
+    const sorted = [...line].sort((a, b) => (w.job.goals[a].order ?? 0) - (w.job.goals[b].order ?? 0))
+    const jumbled = sorted.some((g, i) => i > 0 && (spot.get(g) ?? 0) <= (spot.get(sorted[i - 1]) ?? 0))
+    if (jumbled) for (const g of line) met[g] = false
   }
-  return true
+  return met
+}
+
+export function checkJob(w: World): boolean {
+  return goalsMet(w).every(Boolean)
 }
 
 export function tick(w: World, dt: number, controls: Controls): void {
