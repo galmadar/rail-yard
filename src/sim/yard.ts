@@ -50,10 +50,17 @@ export interface Step {
   forward: boolean
 }
 
+/** A name board beside a road, `at` being the fraction along it where it stands. */
+export interface SignPost {
+  edge: EdgeId
+  at: number
+}
+
 export interface Yard {
   nodes: Map<NodeId, YardNode>
   edges: Map<EdgeId, Edge>
   switchOrder: NodeId[]
+  signs: SignPost[]
 }
 
 export function edge(y: Yard, id: EdgeId): Edge {

@@ -2,15 +2,6 @@ import * as THREE from 'three'
 import { poseAt } from '../sim/geometry'
 import type { Yard } from '../sim/yard'
 
-/** Which roads get a board, and how far along the road it stands. */
-const SIGNED: { edge: string; at: number }[] = [
-  { edge: 'headshunt', at: 0.35 },
-  { edge: 'spare', at: 0.45 },
-  { edge: 'goods-road', at: 0.62 },
-  { edge: 'oil-road', at: 0.62 },
-  { edge: 'coal-road', at: 0.62 },
-]
-
 function board(text: string, colour: string | null): THREE.Sprite {
   const h = 168
   const font = '600 62px "Avenir Next", Verdana, sans-serif'
@@ -72,7 +63,7 @@ export function buildRoadSigns(yard: Yard, wanted: Map<string, string>): THREE.G
   const group = new THREE.Group()
   const postMat = new THREE.MeshStandardMaterial({ color: 0x30353a, roughness: 0.8 })
 
-  for (const { edge, at } of SIGNED) {
+  for (const { edge, at } of yard.signs) {
     const e = yard.edges.get(edge)
     if (!e) continue
     const p = poseAt(e.line, e.line.length * at)
