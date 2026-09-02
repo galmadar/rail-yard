@@ -38,6 +38,7 @@ function play(index: number): void {
     hudRoot,
     () => play((world.jobIndex + 1) % world.jobCount),
     () => play(world.jobIndex),
+    play,
   )
 }
 

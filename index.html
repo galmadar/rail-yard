@@ -32,12 +32,25 @@
       }
 
       .job-panel { top: 20px; left: 20px; min-width: 280px; }
-      .job-step {
+      .picker { display: flex; gap: 6px; margin-bottom: 10px; pointer-events: auto; }
+      .pip {
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        border: 1px solid var(--edge);
+        background: rgba(255, 255, 255, 0.07);
         color: var(--dim);
+        font: inherit;
         font-size: 12px;
-        letter-spacing: 0.9px;
-        text-transform: uppercase;
+        cursor: pointer;
+        padding: 0;
+        transition: transform 0.12s, background 0.12s;
       }
+      .pip:hover:not(.shut) { transform: translateY(-1px); background: rgba(255, 255, 255, 0.16); }
+      .pip.passed { background: rgba(143, 214, 148, 0.28); color: #d6f2d8; border-color: rgba(143, 214, 148, 0.55); }
+      .pip.here { background: var(--ink); color: #11161a; border-color: var(--ink); font-weight: 700; }
+      .pip.shut { opacity: 0.3; cursor: default; }
+
       .job-title { margin: 2px 0 10px; font-size: 17px; letter-spacing: 0.3px; }
       .goals { margin: 0; padding: 0; list-style: none; }
       .goal {

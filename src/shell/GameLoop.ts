@@ -2,6 +2,7 @@ import { Renderer } from '../render/Renderer'
 import { moveCut, say, tick, tryThrowSwitch, uncouple, type Controls, type World } from '../sim/World'
 import { Keyboard } from '../input/Keyboard'
 import { Hud } from './Hud'
+import { markPassed } from './progress'
 
 const MAX_STEP = 1 / 30
 
@@ -60,9 +61,10 @@ export function start(
   hudRoot: HTMLElement,
   onNext: () => void,
   onAgain: () => void,
+  onPick: (index: number) => void,
 ): Game {
   const { renderer, release } = buildRenderer(canvas, world)
-  const hud = new Hud(hudRoot)
+  const hud = new Hud(hudRoot, onPick)
   const keys = freshKeys()
 
   world.yard.switchOrder.forEach((id, i) => {
@@ -99,6 +101,7 @@ export function start(
     }
 
     tick(world, dt, controls)
+    if (world.done) markPassed(world.jobIndex)
     hud.update(world)
     renderer.sync(world, dt)
     handle = requestAnimationFrame(frame)

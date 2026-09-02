@@ -1,4 +1,5 @@
 import { goalsMet, lockedSwitches, playerTrain, type World } from '../sim/World'
+import { isOpen, isPassed } from './progress'
 
 function el(tag: string, cls: string, parent: HTMLElement): HTMLElement {
   const node = document.createElement(tag)
@@ -10,7 +11,9 @@ function el(tag: string, cls: string, parent: HTMLElement): HTMLElement {
 /** Everything the driver needs to see, and nothing about the code underneath. */
 export class Hud {
   private layer: HTMLElement
-  private step: HTMLElement
+  private picker: HTMLElement
+  private jump: (index: number) => void
+  private pips: HTMLButtonElement[] = []
   private job: HTMLElement
   private goals: HTMLElement
   private readout: HTMLElement
@@ -18,12 +21,13 @@ export class Hud {
   private points: HTMLElement
   private done: HTMLElement
 
-  constructor(root: HTMLElement) {
+  constructor(root: HTMLElement, jump: (index: number) => void) {
+    this.jump = jump
     // Its own layer, so swapping jobs can take the whole panel away in one go.
     this.layer = el('div', 'hud-layer', root)
 
     const panel = el('div', 'panel job-panel', this.layer)
-    this.step = el('div', 'job-step', panel)
+    this.picker = el('div', 'picker', panel)
     this.job = el('h1', 'job-title', panel)
     this.goals = el('ul', 'goals', panel)
 
@@ -39,8 +43,29 @@ export class Hud {
     this.layer.remove()
   }
 
+  /** One pip per job. Passed ones stay open so you can go back to a favourite. */
+  private buildPicker(world: World): void {
+    if (this.pips.length === world.jobCount) return
+    this.picker.innerHTML = ''
+    this.pips = []
+    for (let i = 0; i < world.jobCount; i++) {
+      const pip = document.createElement('button')
+      pip.textContent = String(i + 1)
+      pip.addEventListener('click', () => {
+        if (isOpen(i)) this.jump(i)
+      })
+      this.picker.appendChild(pip)
+      this.pips.push(pip)
+    }
+  }
+
   update(world: World): void {
-    this.step.textContent = `Job ${world.jobIndex + 1} of ${world.jobCount}`
+    this.buildPicker(world)
+    this.pips.forEach((pip, i) => {
+      const state = i === world.jobIndex ? 'here' : isPassed(i) ? 'passed' : isOpen(i) ? 'open' : 'shut'
+      pip.className = `pip ${state}`
+      pip.title = state === 'shut' ? 'pass the one before it first' : `job ${i + 1}`
+    })
     this.job.textContent = world.job.title
 
     this.goals.innerHTML = ''
