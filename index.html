@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Marsden Yard</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --ink: #f2efe8;
+        --dim: #b3aea3;
+        --panel: rgba(20, 24, 28, 0.78);
+        --edge: rgba(255, 255, 255, 0.12);
+      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; height: 100%; overflow: hidden; background: #0d1014; }
+      body {
+        font: 15px/1.45 ui-rounded, "SF Pro Rounded", "Avenir Next", Verdana, sans-serif;
+        color: var(--ink);
+      }
+      #view { display: block; width: 100vw; height: 100vh; }
+
+      #hud { position: fixed; inset: 0; pointer-events: none; }
+      .panel {
+        position: absolute;
+        background: var(--panel);
+        border: 1px solid var(--edge);
+        border-radius: 14px;
+        padding: 14px 18px;
+        backdrop-filter: blur(9px);
+      }
+
+      .job-panel { top: 20px; left: 20px; min-width: 280px; }
+      .job-title { margin: 0 0 10px; font-size: 17px; letter-spacing: 0.3px; }
+      .goals { margin: 0; padding: 0; list-style: none; }
+      .goal {
+        color: var(--dim);
+        padding: 4px 0;
+        display: grid;
+        grid-template-columns: 18px 1fr 18px;
+        align-items: center;
+        gap: 10px;
+      }
+      .goal.done { color: #8fd694; }
+      .swatch {
+        width: 16px;
+        height: 16px;
+        border-radius: 4px;
+        border: 1px solid rgba(0, 0, 0, 0.45);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28);
+      }
+      .tick { text-align: right; color: #8fd694; }
+
+      .readout-panel {
+        left: 50%;
+        bottom: 20px;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 18px;
+        align-items: center;
+        white-space: nowrap;
+      }
+      .readout { color: var(--ink); font-variant-numeric: tabular-nums; }
+      .points { display: flex; gap: 8px; }
+      .chip {
+        border-radius: 999px;
+        padding: 3px 11px;
+        font-size: 13px;
+        border: 1px solid var(--edge);
+      }
+      .chip.straight { background: rgba(47, 106, 208, 0.35); }
+      .chip.diverge { background: rgba(216, 164, 23, 0.32); }
+      .chip.locked { opacity: 0.45; text-decoration: line-through; }
+
+      .notice {
+        position: absolute;
+        left: 50%;
+        bottom: 92px;
+        transform: translateX(-50%) translateY(6px);
+        padding: 8px 16px;
+        border-radius: 999px;
+        background: var(--panel);
+        border: 1px solid var(--edge);
+        opacity: 0;
+        transition: opacity 0.25s, transform 0.25s;
+      }
+      .notice.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+      .notice.warn { color: #ffcf7a; }
+      .notice.good { color: #8fd694; }
+
+      .done {
+        position: absolute;
+        left: 50%;
+        top: 42%;
+        transform: translate(-50%, -50%) scale(0.96);
+        font-size: 30px;
+        padding: 18px 34px;
+        border-radius: 18px;
+        background: var(--panel);
+        border: 1px solid var(--edge);
+        opacity: 0;
+        transition: opacity 0.4s, transform 0.4s;
+      }
+      .done.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+
+      #help {
+        position: fixed;
+        right: 20px;
+        top: 20px;
+        background: var(--panel);
+        border: 1px solid var(--edge);
+        border-radius: 14px;
+        padding: 14px 18px;
+        color: var(--dim);
+        font-size: 13px;
+        line-height: 1.7;
+      }
+      #help b { color: var(--ink); font-weight: 600; }
+      #help h2 { margin: 0 0 8px; font-size: 14px; color: var(--ink); }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <div id="hud"></div>
+    <div id="help">
+      <h2>Working the yard</h2>
+      <b>W</b> / <b>S</b> — drive forward, back<br />
+      <b>Space</b> — brake<br />
+      <b>1 2 3</b> — swing the points<br />
+      <b>Q</b> / <b>E</b> — move the pin along the train<br />
+      <b>U</b> — pull the pin, cut off<br />
+      <b>F</b> — park the camera<br />
+      drag to look · wheel to zoom
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
