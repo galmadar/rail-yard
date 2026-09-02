@@ -1,5 +1,6 @@
 import type { World } from '../../sim/World'
 import { createWorld as createSmallYard } from './smallYard'
+import { createLoopWorld } from './loopYard'
 
 export interface YardEntry {
   id: string
@@ -10,6 +11,7 @@ export interface YardEntry {
 /** Every yard you can be sent to work. */
 export const YARDS: YardEntry[] = [
   { id: 'marsden', name: 'Marsden Yard', create: createSmallYard },
+  { id: 'halton', name: 'Halton Loop', create: createLoopWorld },
 ]
 
 export function yardById(id: string): YardEntry {
