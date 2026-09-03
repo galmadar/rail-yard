@@ -3,11 +3,11 @@ import type { Job } from '../../sim/World'
 import { loco, wagon, type Vehicle } from '../../sim/vehicles'
 
 const SHUNTER = loco('shunter', 'the shunter')
-const TANKER = wagon('tanker', 'the tanker', '#3f7fb8')
-const HOPPER = wagon('hopper', 'the coal hopper', '#4d7a44')
-const VAN = wagon('van', 'the box van', '#a8443a')
-const FLAT = wagon('flat', 'the flat wagon', '#8a8f96')
-const BRAKE = wagon('brake', 'the brake van', '#6b4a2f')
+const TANKER = wagon('tanker', 'the tanker', '#3f7fb8', 'tanker')
+const HOPPER = wagon('hopper', 'the coal hopper', '#4d7a44', 'coal-hopper')
+const VAN = wagon('van', 'the box van', '#a8443a', 'box-van')
+const FLAT = wagon('flat', 'the flat wagon', '#8a8f96', 'flat')
+const BRAKE = wagon('brake', 'the brake van', '#6b4a2f', 'brake-van')
 
 /** A cut standing still. `cars` runs from the far end of the road back towards the points. */
 function standing(id: string, cars: Vehicle[], edge: string, head: number): Train {

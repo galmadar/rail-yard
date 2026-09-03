@@ -69,9 +69,14 @@ export class Renderer {
     this.markers = marks.markers
     this.scene.add(marks.group)
 
+    // Name boards grow with the yard so they stay readable, and every other one
+    // sits higher so a close-coupled rake does not read as one smear of text.
+    const labelHeight = Math.max(2.9, view.distance * 0.019)
+    let nth = 0
     for (const train of world.trains) {
       for (const car of train.cars) {
-        const mesh = buildVehicle(car.vehicle)
+        const lift = 5.3 + (nth++ % 2) * labelHeight * 1.15
+        const mesh = buildVehicle(car.vehicle, { height: labelHeight, lift })
         this.vehicles.set(car.vehicle.id, mesh)
         this.scene.add(mesh)
       }
