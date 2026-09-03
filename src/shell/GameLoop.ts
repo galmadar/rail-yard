@@ -76,6 +76,8 @@ export function start(
   onPick: (index: number) => void,
 ): Game {
   const { renderer, release } = buildRenderer(canvas, world)
+  // Dev only: camera bugs are invisible in a screenshot but obvious in numbers.
+  if (import.meta.env.DEV) (globalThis as Record<string, unknown>).yardCamera = renderer.view
   const recentre = (): void => {
     renderer.view.recentre()
     say(world, 'camera back where the job started')

@@ -50,11 +50,13 @@ export class YardCamera {
         this.azimuth -= dx * 0.005
         this.elevation = Math.max(0.18, Math.min(1.45, this.elevation + dy * 0.004))
       } else {
+        // Screen right is (sin, 0, -cos) and screen up is (-cos, 0, -sin), so
+        // the yard follows the cursor instead of sliding at right angles to it.
         const scale = this.distance * 0.0016
         const sin = Math.sin(this.azimuth)
         const cos = Math.cos(this.azimuth)
-        this.target.x += (-dx * cos - dy * sin) * scale
-        this.target.z += (-dx * sin + dy * cos) * scale
+        this.target.x += (-dx * sin - dy * cos) * scale
+        this.target.z += (dx * cos - dy * sin) * scale
       }
     })
     canvas.addEventListener(
