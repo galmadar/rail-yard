@@ -23,8 +23,9 @@ function drop(w: World, leave: number): void {
   expect(playerTrain(w)!.cars.length).toBe(before - leave)
 }
 
-const east = (w: World) => driveToStop(w, 1)
-const west = (w: World) => driveToStop(w, -1)
+// The shunter stands nose to the west, so driving east means throttle astern.
+const east = (w: World) => driveToStop(w, -1)
+const west = (w: World) => driveToStop(w, 1)
 
 describe('working the jobs through', () => {
   it('makes up the goods train by picking the wagons up backwards', () => {

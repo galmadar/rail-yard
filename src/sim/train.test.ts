@@ -5,8 +5,9 @@ import { TUNING } from './tuning'
 import { carEdge, carSpan, frontPose, hasLoco, roll, trainLength, type Train } from './train'
 
 const COAST: Controls = { throttle: 0, brake: false }
-const AHEAD: Controls = { throttle: 1, brake: false }
-const ASTERN: Controls = { throttle: -1, brake: false }
+// The shunter stands nose to the west, so driving east means throttle astern.
+const EAST: Controls = { throttle: -1, brake: false }
+const WEST: Controls = { throttle: 1, brake: false }
 const BRAKE: Controls = { throttle: 0, brake: true }
 
 function run(w: ReturnType<typeof createWorld>, seconds: number, c: Controls): void {
@@ -85,7 +86,7 @@ describe('shunting', () => {
     tryThrowSwitch(w, 'point-1')
     expect(t.cars.length).toBe(1)
 
-    run(w, 60, AHEAD)
+    run(w, 60, EAST)
     const joined = playerTrain(w)!
     expect(joined.cars.length).toBe(2)
     expect(w.trains.length).toBe(3)
@@ -101,10 +102,10 @@ describe('shunting', () => {
     const count = () => cars(w)
     expect(count()).toBe(4)
     tryThrowSwitch(w, 'point-1')
-    run(w, 60, AHEAD)
+    run(w, 60, EAST)
     expect(count()).toBe(4)
     // Pull the pin on the move, so the wagon carries on rolling by itself.
-    run(w, 2, ASTERN)
+    run(w, 2, WEST)
     uncouple(w)
     expect(count()).toBe(4)
     run(w, 40, COAST)
@@ -122,7 +123,8 @@ describe('wagons running loose', () => {
   it('keeps the speed it was let go at, then runs down to a stand', () => {
     const w = createWorld()
     hooked(w, 'pushing')
-    run(w, 1, AHEAD)
+    // Half a second is plenty of a shove now - any more and it reaches the stops.
+    run(w, 0.5, EAST)
     const speed = playerTrain(w)!.speed
     uncouple(w)
 
@@ -142,7 +144,7 @@ describe('wagons running loose', () => {
     const w = createWorld()
     hooked(w, 'pushing')
     tryThrowSwitch(w, 'point-1')
-    run(w, 2, AHEAD)
+    run(w, 2, EAST)
     uncouple(w)
     run(w, 1, BRAKE)
     run(w, 40, COAST)
@@ -157,7 +159,7 @@ describe('wagons running loose', () => {
   it('is stopped by the buffer stop, and says so once', () => {
     const w = createWorld()
     hooked(w, 'pushing')
-    run(w, 2, AHEAD)
+    run(w, 2, EAST)
     uncouple(w)
     run(w, 1, BRAKE)
     run(w, 60, COAST)
@@ -177,7 +179,7 @@ describe('wagons running loose', () => {
     const t = playerTrain(w)!
     t.path = [{ edge: 'spare', forward: true }]
     t.head = 60
-    run(w, 1, ASTERN)
+    run(w, 1, WEST)
     uncouple(w)
     run(w, 1, BRAKE)
 
@@ -193,10 +195,10 @@ describe('wagons running loose', () => {
   it('lets you drop a cut into a siding and take the loco elsewhere', () => {
     const w = createWorld()
     hooked(w, 'pulling')
-    run(w, 1, AHEAD)
+    run(w, 0.5, EAST)
     uncouple(w)
     // Run on hard, clear the points, then set the road behind you for the cut.
-    run(w, 3, AHEAD)
+    run(w, 2, EAST)
     tryThrowSwitch(w, 'point-1')
     run(w, 2, BRAKE)
     run(w, 60, COAST)
