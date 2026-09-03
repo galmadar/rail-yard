@@ -2,7 +2,7 @@ import { join, polyline, sCurve, straight, type Polyline, type Vec2 } from '../.
 import type { Edge, Yard, YardNode } from '../../sim/yard'
 import type { Train } from '../../sim/train'
 import type { World, Job } from '../../sim/World'
-import { loco, wagon } from '../../sim/vehicles'
+import { loco, wagon, type Vehicle } from '../../sim/vehicles'
 
 /** A circular bend, swept from one angle to another (degrees) about a centre. */
 function bend(cx: number, cz: number, r: number, from: number, to: number, samples = 36): Polyline {
@@ -139,7 +139,7 @@ const ORE = wagon('ore', 'the ore hopper', '#4d7a44', 'ore-hopper')
 const CRATE_VAN = wagon('crate-van', 'the crate van', '#a8443a', 'box-van')
 const TIMBER = wagon('timber', 'the timber wagon', '#b8862f', 'timber')
 
-function standing(id: string, cars: typeof PILOT[], edge: string, head: number): Train {
+function standing(id: string, cars: Vehicle[], edge: string, head: number): Train {
   return {
     id,
     cars: cars.map((vehicle) => ({ vehicle, reversed: false })),
@@ -149,31 +149,100 @@ function standing(id: string, cars: typeof PILOT[], edge: string, head: number):
   }
 }
 
-export const RUNAROUND_JOB: Job = {
-  title: 'Round the loop',
-  goals: [
-    { vehicleId: 'ore', edgeId: 'ore-road', text: 'the ore hopper goes on the ore road' },
-    { vehicleId: 'crate-van', edgeId: 'van-road', text: 'the crate van goes on the van road' },
-    { vehicleId: 'timber', edgeId: 'far-road', text: 'the timber wagon goes on the far road' },
-  ],
+/** The same, but already running - nobody is on it and nothing is holding it. */
+function loose(id: string, cars: Vehicle[], edge: string, head: number, speed: number): Train {
+  return { ...standing(id, cars, edge, head), speed }
+}
+
+interface JobSetup {
+  job: Job
+  /** Built fresh each time, so starting a job over really starts it over. */
+  layout: () => Train[]
 }
 
 /**
- * The pilot starts east of the cut, and every siding is entered going east, so
- * it has to shove the wagons - it can never leave one behind while pulling.
- * Getting to their far end means going all the way round the loop.
+ * Three days at Halton. The ring is the whole yard: the only way round to the
+ * far side of a cut, the only road with no end to it, and the only place a
+ * wagon nobody is holding can come all the way round and find you.
  */
-export function createLoopWorld(): World {
-  const yard = buildYard()
-  return {
-    yard,
-    trains: [
+export const HALTON_JOBS: JobSetup[] = [
+  {
+    job: {
+      title: 'Round the loop',
+      goals: [
+        { vehicleId: 'ore', edgeId: 'ore-road', text: 'the ore hopper goes on the ore road' },
+        { vehicleId: 'crate-van', edgeId: 'van-road', text: 'the crate van goes on the van road' },
+        { vehicleId: 'timber', edgeId: 'far-road', text: 'the timber wagon goes on the far road' },
+      ],
+    },
+    // The pilot starts east of the cut, and every siding is entered going east,
+    // so it has to shove the wagons - it can never leave one behind while
+    // pulling. Getting to their far end means going all the way round the loop.
+    layout: () => [
       standing('player', [PILOT], 'yard-east', 22),
       standing('cut', [ORE, CRATE_VAN, TIMBER], 'yard-west', 30),
     ],
-    job: RUNAROUND_JOB,
-    jobIndex: 0,
-    jobCount: 1,
+  },
+  {
+    job: {
+      title: 'The runaway',
+      goals: [
+        { vehicleId: 'ore', edgeId: 'ore-road', text: 'get the runaway hopper onto the ore road' },
+        { vehicleId: 'crate-van', edgeId: 'van-road', text: 'the crate van goes on the van road' },
+        {
+          vehicleId: 'pilot',
+          edgeId: 'far-road',
+          alone: true,
+          finish: true,
+          text: 'then put the pilot away on the far road, on its own',
+        },
+      ],
+    },
+    // Nobody is holding the hopper and the ring has no end, so it is coming
+    // round to you whatever you do. Set a road for it and it puts itself away.
+    layout: () => [
+      standing('player', [PILOT], 'yard-east', 18),
+      standing('cut-van', [CRATE_VAN], 'yard-east', 28),
+      loose('runaway', [ORE], 'loop', 40, 20),
+    ],
+  },
+  {
+    job: {
+      title: 'Leave one on the loop',
+      goals: [
+        { vehicleId: 'ore', edgeId: 'ore-road', text: 'the ore hopper goes on the ore road' },
+        {
+          vehicleId: 'timber',
+          edgeId: 'loop',
+          text: 'the timber wagon is left standing out on the loop for the engineers',
+        },
+        {
+          vehicleId: 'pilot',
+          edgeId: 'far-road',
+          alone: true,
+          finish: true,
+          text: 'then put the pilot away on the far road, on its own',
+        },
+      ],
+    },
+    // A wagon left on the loop shuts the ring for good, and the far road can
+    // only be reached off the loop - so the pilot has to be pulling the timber
+    // wagon when it drops it, which means getting to its far side first.
+    layout: () => [
+      standing('player', [PILOT], 'yard-west', 12),
+      standing('cut', [ORE, TIMBER], 'yard-west', 30),
+    ],
+  },
+]
+
+export function createLoopWorld(jobIndex = 0): World {
+  const setup = HALTON_JOBS[Math.max(0, Math.min(HALTON_JOBS.length - 1, jobIndex))]
+  return {
+    yard: buildYard(),
+    trains: setup.layout(),
+    job: setup.job,
+    jobIndex: HALTON_JOBS.indexOf(setup),
+    jobCount: HALTON_JOBS.length,
     time: 0,
     notice: null,
     cutAt: 1,

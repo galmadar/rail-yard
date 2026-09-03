@@ -17,6 +17,7 @@ import { createLoopWorld } from './loopYard'
 const ALONG: Controls = { throttle: 1, brake: false }
 const BACK: Controls = { throttle: -1, brake: false }
 const COAST: Controls = { throttle: 0, brake: false }
+const STOP: Controls = { throttle: 0, brake: true }
 
 function driveUntil(w: World, c: Controls, seconds: number, done: () => boolean): boolean {
   for (let i = 0; i < seconds * 60; i++) {
@@ -28,6 +29,15 @@ function driveUntil(w: World, c: Controls, seconds: number, done: () => boolean)
 
 function onEdge(t: Train, id: string): boolean {
   return t.path.some((s) => s.edge === id)
+}
+
+/** Every wheel of it inside one road, nothing hanging out over the points. */
+function wholly(t: Train, id: string): boolean {
+  return t.path.length === 1 && t.path[0].edge === id
+}
+
+function cutWith(w: World, vehicleId: string): Train {
+  return w.trains.find((t) => t.cars.some((c) => c.vehicle.id === vehicleId))!
 }
 
 /** Once round the ring: the loop plus the yard road that closes it. */
@@ -110,6 +120,102 @@ describe('the runaround', () => {
     expect(checkJob(w)).toBe(true)
     // The yard only calls the job done once you are rolling again.
     expect(driveUntil(w, BACK, 5, () => w.done)).toBe(true)
+  })
+})
+
+describe('the runaway', () => {
+  it('puts itself away if you set it a road before it gets to you', () => {
+    const w = createLoopWorld(1)
+
+    // It is coming round whatever you do, so give it somewhere to go.
+    tryThrowSwitch(w, 'point-2')
+    expect(
+      driveUntil(
+        w,
+        COAST,
+        90,
+        () => carEdge(w.yard, cutWith(w, 'ore'), 0) === 'ore-road' && cutWith(w, 'ore').speed === 0,
+      ),
+    ).toBe(true)
+    expect(playerTrain(w)!.cars.length).toBe(1)
+
+    // Yard road straight again, and the far road set for the finish.
+    tryThrowSwitch(w, 'point-2')
+    tryThrowSwitch(w, 'point-1')
+    tryThrowSwitch(w, 'point-3')
+
+    expect(driveUntil(w, ALONG, 60, () => playerTrain(w)!.cars.length === 2)).toBe(true)
+    expect(
+      driveUntil(
+        w,
+        ALONG,
+        60,
+        () => carEdge(w.yard, playerTrain(w)!, 0) === 'van-road' && playerTrain(w)!.speed === 0,
+      ),
+    ).toBe(true)
+    w.cutAt = 1
+    uncouple(w)
+
+    expect(
+      driveUntil(
+        w,
+        BACK,
+        60,
+        () => !onEdge(playerTrain(w)!, 'van-road') && !lockedSwitches(w).has('point-3'),
+      ),
+    ).toBe(true)
+    driveUntil(w, COAST, 5, () => playerTrain(w)!.speed === 0)
+    tryThrowSwitch(w, 'point-3')
+
+    // Round the loop and into the far road, which is the only way in to it.
+    expect(driveUntil(w, ALONG, 90, () => w.done)).toBe(true)
+  })
+})
+
+describe('leaving one on the loop', () => {
+  it('has to be pulling the wagon, so it goes round the other way to get behind it', () => {
+    const w = createLoopWorld(2)
+
+    expect(driveUntil(w, ALONG, 30, () => playerTrain(w)!.cars.length === 3)).toBe(true)
+
+    tryThrowSwitch(w, 'point-2')
+    expect(
+      driveUntil(
+        w,
+        ALONG,
+        60,
+        () => carEdge(w.yard, playerTrain(w)!, 0) === 'ore-road' && playerTrain(w)!.speed === 0,
+      ),
+    ).toBe(true)
+    w.cutAt = 1
+    uncouple(w)
+
+    expect(
+      driveUntil(
+        w,
+        BACK,
+        60,
+        () => !onEdge(playerTrain(w)!, 'ore-road') && !lockedSwitches(w).has('point-2'),
+      ),
+    ).toBe(true)
+    driveUntil(w, COAST, 5, () => playerTrain(w)!.speed === 0)
+    tryThrowSwitch(w, 'point-2')
+
+    // Stand the timber wagon down and go the long way round to its other end.
+    w.cutAt = 1
+    uncouple(w)
+    expect(playerTrain(w)!.cars.length).toBe(1)
+    expect(driveUntil(w, BACK, 90, () => playerTrain(w)!.cars.length === 2)).toBe(true)
+
+    // Now it can draw it out onto the loop and still get past it afterwards.
+    expect(driveUntil(w, ALONG, 60, () => wholly(playerTrain(w)!, 'loop'))).toBe(true)
+    expect(driveUntil(w, STOP, 20, () => playerTrain(w)!.speed === 0)).toBe(true)
+    w.cutAt = 1
+    uncouple(w)
+    expect(playerTrain(w)!.cars.length).toBe(1)
+
+    tryThrowSwitch(w, 'point-1')
+    expect(driveUntil(w, ALONG, 90, () => w.done)).toBe(true)
   })
 })
 
