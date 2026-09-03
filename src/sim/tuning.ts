@@ -19,10 +19,11 @@ export const TUNING = {
   /** Bleed-off when you let go of everything. */
   drag: 5,
   /**
-   * How quickly a cut with nobody driving it runs down, m/s^2. Real wagons roll
-   * for half a mile; this stops one inside a siding so a kick is a fair shot.
+   * How quickly a cut with nobody driving it runs down, m/s^2. Low enough that
+   * a kicked wagon really runs, high enough that a runaway on Halton's closed
+   * loop still stands inside two minutes instead of circling for ever.
    */
-  rollingResistance: 0.6,
+  rollingResistance: 0.36,
   /** Buffer up faster than this and you get told off. */
   safeCouplingSpeed: 5,
 } as const

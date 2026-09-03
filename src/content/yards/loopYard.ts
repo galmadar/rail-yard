@@ -16,7 +16,7 @@ function bend(cx: number, cz: number, r: number, from: number, to: number, sampl
 
 /**
  * Halton Loop. The yard road runs west to east through three sets of points and
- * then swings away north on a big loop that comes back in at the west end, so
+ * then swings away north on a tight loop that comes back in at the west end, so
  * the road bites its own tail. Drive round it and you come back facing the same
  * way but standing at the other end of whatever you left behind.
  *
@@ -24,12 +24,20 @@ function bend(cx: number, cz: number, r: number, from: number, to: number, sampl
  * two roads are ever drawn over each other.
  */
 const LOOP_LINE = join(
-  straight({ x: 50, z: 0 }, { x: 80, z: 0 }),
-  bend(80, -30, 30, 90, -90),
-  straight({ x: 80, z: -60 }, { x: -80, z: -60 }),
-  bend(-80, -30, 30, -90, -270),
-  straight({ x: -80, z: 0 }, { x: -50, z: 0 }),
+  straight({ x: 23, z: 0 }, { x: 33, z: 0 }),
+  bend(33, -20, 20, 90, -90),
+  straight({ x: 33, z: -40 }, { x: -53, z: -40 }),
+  bend(-53, -20, 20, -90, -270),
+  straight({ x: -53, z: 0 }, { x: -43, z: 0 }),
 )
+
+/**
+ * Sidings drop away in two eases rather than one: the quick first half pulls a
+ * road clear of the one above it right at the throat, where they are tightest.
+ */
+function siding(toe: Vec2, knee: Vec2, level: Vec2, endX: number): Polyline {
+  return join(sCurve(toe, knee), sCurve(knee, level), straight(level, { x: endX, z: level.z }))
+}
 
 function buildYard(): Yard {
   const edges: Edge[] = [
@@ -45,44 +53,35 @@ function buildYard(): Yard {
       name: 'the yard road',
       from: 'point-1',
       to: 'point-2',
-      line: straight({ x: -50, z: 0 }, { x: -10, z: 0 }),
+      line: straight({ x: -43, z: 0 }, { x: -8, z: 0 }),
     },
     {
       id: 'yard-east',
       name: 'the yard road',
       from: 'point-2',
       to: 'point-3',
-      line: straight({ x: -10, z: 0 }, { x: 50, z: 0 }),
+      line: straight({ x: -8, z: 0 }, { x: 23, z: 0 }),
     },
     {
       id: 'far-road',
       name: 'the far road',
       from: 'point-1',
       to: 'buffer-far',
-      line: join(
-        sCurve({ x: -50, z: 0 }, { x: 8, z: 34 }),
-        straight({ x: 8, z: 34 }, { x: 68, z: 34 }),
-      ),
+      line: siding({ x: -43, z: 0 }, { x: -5, z: 26 }, { x: 30, z: 45 }, 70),
     },
     {
       id: 'ore-road',
       name: 'the ore road',
       from: 'point-2',
       to: 'buffer-ore',
-      line: join(
-        sCurve({ x: -10, z: 0 }, { x: 40, z: 20 }),
-        straight({ x: 40, z: 20 }, { x: 85, z: 20 }),
-      ),
+      line: siding({ x: -8, z: 0 }, { x: 28, z: 17 }, { x: 56, z: 30 }, 84),
     },
     {
       id: 'van-road',
       name: 'the van road',
       from: 'point-3',
       to: 'buffer-van',
-      line: join(
-        sCurve({ x: 50, z: 0 }, { x: 78, z: 11 }),
-        straight({ x: 78, z: 11 }, { x: 125, z: 11 }),
-      ),
+      line: siding({ x: 23, z: 0 }, { x: 50, z: 9 }, { x: 72, z: 15 }, 94),
     },
   ]
 
@@ -131,7 +130,7 @@ function buildYard(): Yard {
       { edge: 'ore-road', at: 0.5 },
       { edge: 'van-road', at: 0.75 },
     ],
-    view: { centre: { x: 8, z: -12 }, distance: 230 },
+    view: { centre: { x: 11, z: 2 }, distance: 152 },
   }
 }
 
@@ -169,8 +168,8 @@ export function createLoopWorld(): World {
   return {
     yard,
     trains: [
-      standing('player', [PILOT], 'yard-east', 30),
-      standing('cut', [ORE, CRATE_VAN, TIMBER], 'yard-west', 34),
+      standing('player', [PILOT], 'yard-east', 22),
+      standing('cut', [ORE, CRATE_VAN, TIMBER], 'yard-west', 30),
     ],
     job: RUNAROUND_JOB,
     jobIndex: 0,
