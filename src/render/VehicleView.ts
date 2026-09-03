@@ -64,20 +64,20 @@ function locoBody(v: Vehicle): THREE.Group {
   const mat = new THREE.MeshStandardMaterial({ color: v.colour, roughness: 0.55 })
 
   const hood = box(v.length * 0.52, 1.5, v.width * 0.78, mat)
-  hood.position.set(-v.length * 0.2, 1.8, 0)
+  hood.position.set(v.length * 0.2, 1.8, 0)
   g.add(hood)
 
   const cab = box(v.length * 0.34, 2.3, v.width * 0.94, mat)
-  cab.position.set(v.length * 0.28, 2.2, 0)
+  cab.position.set(-v.length * 0.28, 2.2, 0)
   g.add(cab)
 
   const glass = box(v.length * 0.35, 0.85, v.width * 0.96, GLASS_MAT)
-  glass.position.set(v.length * 0.28, 2.9, 0)
+  glass.position.set(-v.length * 0.28, 2.9, 0)
   g.add(glass)
 
   // Yellow warning end - the bit you look for when you are deciding which way it faces.
   const nose = box(0.3, 1.4, v.width * 0.8, new THREE.MeshStandardMaterial({ color: 0xd8a417, roughness: 0.6 }))
-  nose.position.set(-v.length / 2 + 0.15, 1.8, 0)
+  nose.position.set(v.length / 2 - 0.15, 1.8, 0)
   g.add(nose)
 
   return g

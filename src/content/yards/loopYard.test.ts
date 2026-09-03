@@ -13,10 +13,9 @@ import {
 import { edge, type Yard } from '../../sim/yard'
 import { createLoopWorld } from './loopYard'
 
-// The pilot faces back down its own path, so running the way the path runs
-// means throttle astern.
-const ALONG: Controls = { throttle: -1, brake: false }
-const BACK: Controls = { throttle: 1, brake: false }
+// The pilot faces the way its path runs, so running along it is throttle ahead.
+const ALONG: Controls = { throttle: 1, brake: false }
+const BACK: Controls = { throttle: -1, brake: false }
 const COAST: Controls = { throttle: 0, brake: false }
 
 function driveUntil(w: World, c: Controls, seconds: number, done: () => boolean): boolean {

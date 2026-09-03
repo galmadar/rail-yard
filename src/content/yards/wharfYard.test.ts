@@ -16,9 +16,9 @@ function driveToStop(w: World, throttle: number): void {
 }
 
 // The shunter always ends up on the tail of its own cut, so shoving is throttle
-// astern and drawing is throttle ahead, whichever way round the yard it is.
-const shove = (w: World) => driveToStop(w, -1)
-const draw = (w: World) => driveToStop(w, 1)
+// ahead and drawing is astern, whichever way round the yard it is.
+const shove = (w: World) => driveToStop(w, 1)
+const draw = (w: World) => driveToStop(w, -1)
 
 /** Move a point over, and prove it really went - a wheel on it would refuse. */
 function swap(w: World, id: string): void {
