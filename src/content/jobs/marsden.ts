@@ -9,7 +9,7 @@ const VAN = wagon('van', 'the box van', '#a8443a', 'box-van')
 const FLAT = wagon('flat', 'the flat wagon', '#8a8f96', 'flat')
 const BRAKE = wagon('brake', 'the brake van', '#6b4a2f', 'brake-van')
 
-/** A cut standing still. `cars` runs from the far end of the road back towards the points. */
+/** A cut standing still. `cars` runs from the buffer stop end back towards the points. */
 function standing(id: string, cars: Vehicle[], edge: string, head: number): Train {
   return {
     id,
@@ -57,19 +57,19 @@ export const MARSDEN_JOBS: JobSetup[] = [
           vehicleId: 'van',
           edgeId: 'goods-road',
           order: 1,
-          text: 'the box van goes right down the far end of the goods road',
+          text: 'the box van goes at the buffer stop end of the goods road',
         },
         {
           vehicleId: 'tanker',
           edgeId: 'goods-road',
           order: 2,
-          text: 'the tanker stands behind the box van',
+          text: 'the tanker stands next to it, on the side nearer the points',
         },
         {
           vehicleId: 'hopper',
           edgeId: 'goods-road',
           order: 3,
-          text: 'the coal hopper stands behind the tanker',
+          text: 'the coal hopper stands next to the tanker, nearest the points',
         },
       ],
     },
@@ -89,26 +89,26 @@ export const MARSDEN_JOBS: JobSetup[] = [
           vehicleId: 'van',
           edgeId: 'goods-road',
           order: 1,
-          text: 'the box van goes right down the far end of the goods road',
+          text: 'the box van goes at the buffer stop end of the goods road',
         },
         {
           vehicleId: 'brake',
           edgeId: 'goods-road',
           order: 2,
-          text: 'the brake van stands behind the box van',
+          text: 'the brake van stands next to it, on the side nearer the points',
         },
         { vehicleId: 'tanker', edgeId: 'oil-road', text: 'the tanker goes on the oil road' },
         {
           vehicleId: 'hopper',
           edgeId: 'coal-road',
           order: 1,
-          text: 'the coal hopper goes right down the far end of the coal road',
+          text: 'the coal hopper goes at the buffer stop end of the coal road',
         },
         {
           vehicleId: 'flat',
           edgeId: 'coal-road',
           order: 2,
-          text: 'the flat wagon stands behind the coal hopper',
+          text: 'the flat wagon stands next to it, on the side nearer the points',
         },
         {
           vehicleId: 'shunter',
@@ -120,7 +120,7 @@ export const MARSDEN_JOBS: JobSetup[] = [
       ],
     },
     // Standing the wrong way round on purpose: the van and the hopper have to go
-    // in first, so the two wagons in front of them need somewhere to wait.
+    // deepest, so the two wagons standing outside them need somewhere to wait.
     layout: () => [
       standing('player', [SHUNTER], 'headshunt', 55),
       standing('cut-rake', [BRAKE, FLAT, TANKER, HOPPER, VAN], 'goods-road', 115),
