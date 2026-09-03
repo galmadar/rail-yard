@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { createWorld } from '../content/yards/smallYard'
 import { MARSDEN_JOBS } from '../content/jobs/marsden'
+import { ROSTER } from '../content/yards/registry'
 import { checkJob, goalsMet, type World } from './World'
 import type { Car } from './train'
 
@@ -61,6 +62,17 @@ describe('the job sheet', () => {
     })
   })
 
+  // A tick before the player has touched anything means the goal is asking for
+  // nothing - either it is worded wrong or it belongs at the end of the job.
+  it('never starts a job with a tick already on the sheet', () => {
+    ROSTER.forEach((booking, i) => {
+      const w = booking.create()
+      goalsMet(w).forEach((met, g) => {
+        expect(met, `job ${i + 1} starts with "${w.job.goals[g].text}" done`).toBe(false)
+      })
+    })
+  })
+
   it('says done once every wagon is where the sheet asked', () => {
     MARSDEN_JOBS.forEach((_, i) => {
       const w = createWorld(i)
@@ -97,5 +109,19 @@ describe('the job sheet', () => {
       { edge: 'coal-road', ids: ['hopper'], head: 70 },
     ])
     expect(checkJob(w)).toBe(false)
+  })
+
+  it('does not tick going home until the wagons are all placed', () => {
+    const w = createWorld(2)
+    stand(w, [
+      { edge: 'headshunt', ids: ['shunter'], head: 55 },
+      { edge: 'goods-road', ids: ['van', 'brake'], head: 110 },
+      { edge: 'spare', ids: ['tanker'], head: 60 },
+      { edge: 'coal-road', ids: ['hopper', 'flat'], head: 70 },
+    ])
+    expect(goalsMet(w).at(-1)).toBe(false)
+
+    stand(w, FINISHED[2])
+    expect(goalsMet(w).at(-1)).toBe(true)
   })
 })

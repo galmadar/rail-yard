@@ -23,6 +23,8 @@ export interface Goal {
   order?: number
   /** Nothing may be coupled to it - how the shunter finishes on its own. */
   alone?: boolean
+  /** The last move of the job: it does not count until every other goal is met. */
+  finish?: boolean
   /** How the job sheet words it. */
   text: string
 }
@@ -245,6 +247,12 @@ export function goalsMet(w: World): boolean[] {
     const jumbled = sorted.some((g, i) => i > 0 && (spot.get(g) ?? 0) <= (spot.get(sorted[i - 1]) ?? 0))
     if (jumbled) for (const g of line) met[g] = false
   }
+
+  // Putting the loco away is only worth a tick once the work in front of it is done.
+  const rest = w.job.goals.every((goal, g) => goal.finish || met[g])
+  w.job.goals.forEach((goal, g) => {
+    if (goal.finish && !rest) met[g] = false
+  })
   return met
 }
 

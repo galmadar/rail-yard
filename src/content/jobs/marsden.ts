@@ -114,6 +114,7 @@ export const MARSDEN_JOBS: JobSetup[] = [
           vehicleId: 'shunter',
           edgeId: 'headshunt',
           alone: true,
+          finish: true,
           text: 'then park the shunter back on the headshunt, on its own',
         },
       ],
