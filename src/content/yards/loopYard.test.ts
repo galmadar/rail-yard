@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { carEdge, type Train } from '../../sim/train'
+import { carEdge, pathLength, roll, type Train } from '../../sim/train'
 import {
   checkJob,
   lockedSwitches,
@@ -10,6 +10,7 @@ import {
   type Controls,
   type World,
 } from '../../sim/World'
+import { edge, type Yard } from '../../sim/yard'
 import { createLoopWorld } from './loopYard'
 
 // The pilot faces back down its own path, so running the way the path runs
@@ -28,6 +29,11 @@ function driveUntil(w: World, c: Controls, seconds: number, done: () => boolean)
 
 function onEdge(t: Train, id: string): boolean {
   return t.path.some((s) => s.edge === id)
+}
+
+/** Once round the ring: the loop plus the yard road that closes it. */
+function ringLength(y: Yard): number {
+  return ['loop', 'yard-west', 'yard-east'].reduce((sum, id) => sum + edge(y, id).line.length, 0)
 }
 
 describe('the runaround', () => {
@@ -105,5 +111,27 @@ describe('the runaround', () => {
     expect(checkJob(w)).toBe(true)
     // The yard only calls the job done once you are rolling again.
     expect(driveUntil(w, BACK, 5, () => w.done)).toBe(true)
+  })
+})
+
+describe('going round and round', () => {
+  // A closed ring is the one place a train can run for ever. If the record of
+  // the track it stands on grew each lap, wagons would start going missing.
+  it('does not let the occupied track grow, lap after lap', () => {
+    const w = createLoopWorld()
+    const ring = ringLength(w.yard)
+
+    for (const t of w.trains) {
+      let mostSteps = t.path.length
+      for (let i = 0; i < 5 * 500; i++) {
+        roll(w.yard, t, ring / 500)
+        mostSteps = Math.max(mostSteps, t.path.length)
+        expect(t.head).toBeLessThanOrEqual(pathLength(w.yard, t) + 1e-6)
+        expect(t.head).toBeGreaterThanOrEqual(-1e-6)
+      }
+      expect(mostSteps).toBeLessThanOrEqual(3)
+      expect(pathLength(w.yard, t)).toBeLessThan(ring)
+      expect(Number.isFinite(t.head)).toBe(true)
+    }
   })
 })
