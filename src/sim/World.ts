@@ -6,6 +6,7 @@ import {
   ensureCovered,
   frontPose,
   hasLoco,
+  noseWay,
   occupiedJunctions,
   reverseCars,
   roll,
@@ -263,9 +264,7 @@ export function checkJob(w: World): boolean {
 function drive(t: Train, dt: number, controls: Controls): void {
   // Forward always means the way the shunter's nose points, whichever way round
   // it ended up in the cut.
-  const locoCar = t.cars.find((c) => c.vehicle.kind === 'loco')
-  const nose = locoCar && locoCar.reversed ? -1 : 1
-  const target = controls.throttle * nose * TUNING.maxSpeed
+  const target = controls.throttle * noseWay(t) * TUNING.maxSpeed
   if (controls.brake) {
     const drop = TUNING.braking * dt
     t.speed = Math.abs(t.speed) <= drop ? 0 : t.speed - Math.sign(t.speed) * drop
@@ -287,13 +286,19 @@ function coast(t: Train, dt: number): void {
 function advance(w: World, t: Train, dt: number): void {
   if (t.speed === 0) return
   const forward = t.speed > 0
-  const { blocked } = roll(w.yard, t, t.speed * dt)
-  if (blocked) {
-    t.speed = 0
-    reportBlock(w, blocked, hasLoco(t))
-    return
+  const total = t.speed * dt
+  // Feel for a coupling every few inches rather than once a frame, so however
+  // fast it is going it buffers up instead of stepping clean over the cut.
+  const steps = Math.max(1, Math.ceil(Math.abs(total) / TUNING.couplingStep))
+  for (let i = 0; i < steps; i++) {
+    const { blocked } = roll(w.yard, t, total / steps)
+    if (blocked) {
+      t.speed = 0
+      reportBlock(w, blocked, hasLoco(t))
+      return
+    }
+    if (tryCouple(w, t, forward)) return
   }
-  tryCouple(w, t, forward)
 }
 
 export function tick(w: World, dt: number, controls: Controls): void {

@@ -15,8 +15,10 @@ import { edge, type Yard } from '../../sim/yard'
 import { createLoopWorld } from './loopYard'
 import { createWorld as createSmallYard } from './smallYard'
 
-const AHEAD: Controls = { throttle: 1, brake: false }
-const BACK: Controls = { throttle: -1, brake: false }
+// The pilot faces back down its own path, so running the way the path runs
+// means throttle astern.
+const ALONG: Controls = { throttle: -1, brake: false }
+const BACK: Controls = { throttle: 1, brake: false }
 const COAST: Controls = { throttle: 0, brake: false }
 
 /** The whole way round: the loop plus both halves of the yard road. */
@@ -105,7 +107,7 @@ describe('the runaround', () => {
       frontPose(w.yard, w.trains.find((t) => t.id === 'cut')!).x,
     )
 
-    const met = driveUntil(w, AHEAD, 90, () => playerTrain(w)!.cars.length === 4)
+    const met = driveUntil(w, ALONG, 90, () => playerTrain(w)!.cars.length === 4)
     expect(met).toBe(true)
 
     // Coupled on at the back: the pilot is now the west end and can shove.
@@ -117,7 +119,7 @@ describe('the runaround', () => {
   it('is the only way to that end - shut the loop and the pilot is stuck', () => {
     const w = createLoopWorld()
     tryThrowSwitch(w, 'point-3')
-    driveUntil(w, AHEAD, 90, () => playerTrain(w)!.cars.length === 4)
+    driveUntil(w, ALONG, 90, () => playerTrain(w)!.cars.length === 4)
     // Off into the van road and against the stops: it never gets past the cut.
     expect(playerTrain(w)!.cars.length).toBe(1)
     expect(carEdge(w.yard, playerTrain(w)!, 0)).toBe('van-road')
@@ -129,14 +131,14 @@ describe('the runaround', () => {
     expect(w.done).toBe(false)
 
     // Run round and pick the cut up from its far end.
-    expect(driveUntil(w, AHEAD, 90, () => playerTrain(w)!.cars.length === 4)).toBe(true)
+    expect(driveUntil(w, ALONG, 90, () => playerTrain(w)!.cars.length === 4)).toBe(true)
 
     // Shove the leading wagon into the ore road and leave it there.
     tryThrowSwitch(w, 'point-2')
     expect(
       driveUntil(
         w,
-        AHEAD,
+        ALONG,
         60,
         () => carEdge(w.yard, playerTrain(w)!, 0) === 'ore-road' && playerTrain(w)!.speed === 0,
       ),
@@ -160,7 +162,7 @@ describe('the runaround', () => {
     expect(
       driveUntil(
         w,
-        AHEAD,
+        ALONG,
         60,
         () => carEdge(w.yard, playerTrain(w)!, 0) === 'van-road' && playerTrain(w)!.speed === 0,
       ),
@@ -180,13 +182,13 @@ describe('the runaround', () => {
     ).toBe(true)
     driveUntil(w, COAST, 5, () => playerTrain(w)!.speed === 0)
     tryThrowSwitch(w, 'point-3')
-    expect(driveUntil(w, AHEAD, 60, () => onEdge(playerTrain(w)!, 'loop'))).toBe(true)
+    expect(driveUntil(w, ALONG, 60, () => onEdge(playerTrain(w)!, 'loop'))).toBe(true)
     expect(lockedSwitches(w).has('point-1')).toBe(false)
     tryThrowSwitch(w, 'point-1')
     expect(
       driveUntil(
         w,
-        AHEAD,
+        ALONG,
         90,
         () => carEdge(w.yard, playerTrain(w)!, 0) === 'far-road' && playerTrain(w)!.speed === 0,
       ),

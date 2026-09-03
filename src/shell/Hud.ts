@@ -1,3 +1,4 @@
+import { noseWay } from '../sim/train'
 import { goalsMet, lockedSwitches, playerTrain, type World } from '../sim/World'
 import { isOpen, isPassed } from './progress'
 
@@ -99,9 +100,7 @@ export class Hud {
 
     const t = playerTrain(world)
     if (t) {
-      const locoCar = t.cars.find((c) => c.vehicle.kind === 'loco')
-      const nose = locoCar && locoCar.reversed ? -1 : 1
-      const facing = t.speed * nose
+      const facing = t.speed * noseWay(t)
       const way = Math.abs(facing) < 0.05 ? 'standing' : facing > 0 ? 'forward' : 'back'
       const behind = t.cars.length - 1
       const cut = behind === 0 ? 'nothing on the hook' : `${behind} on the hook`
@@ -110,8 +109,9 @@ export class Hud {
       const locoAt = t.cars.findIndex((c) => c.vehicle.kind === 'loco')
       const dropping = locoAt < at ? t.cars.length - at : at
       const pin = behind === 0 ? '' : ` · U drops ${dropping}`
-      this.readout.textContent =
-        `${Math.abs(t.speed).toFixed(1)} m/s ${way} · ${cut}${pin}`
+      // Read out in km/h: nobody standing at a lineside talks in metres a second.
+      const kmh = Math.round(Math.abs(t.speed) * 3.6)
+      this.readout.textContent = `${kmh} km/h ${way} · ${cut}${pin}`
     }
 
     const locked = lockedSwitches(world)

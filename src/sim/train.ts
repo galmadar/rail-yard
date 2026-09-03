@@ -47,6 +47,16 @@ export function hasLoco(t: Train): boolean {
   return t.cars.some((c) => c.vehicle.kind === 'loco')
 }
 
+/**
+ * Which way along the path the shunter's yellow end - its nose - points.
+ * The shunter is drawn nose to the tail of its own path, so one that has never
+ * been turned round faces back down it, and forward means -1.
+ */
+export function noseWay(t: Train): number {
+  const loco = t.cars.find((c) => c.vehicle.kind === 'loco')
+  return loco && loco.reversed ? 1 : -1
+}
+
 /** Arc position of the leading buffer of car `i`, and of its trailing buffer. */
 export function carSpan(t: Train, i: number): { front: number; back: number } {
   let front = t.head
