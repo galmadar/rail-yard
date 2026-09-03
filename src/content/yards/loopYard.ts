@@ -136,9 +136,9 @@ function buildYard(): Yard {
 }
 
 const PILOT = loco('pilot', 'the pilot')
-const ORE = wagon('ore', 'the ore hopper', '#4d7a44')
-const CRATE_VAN = wagon('crate-van', 'the crate van', '#a8443a')
-const TIMBER = wagon('timber', 'the timber wagon', '#b8862f')
+const ORE = wagon('ore', 'the ore hopper', '#4d7a44', 'ore-hopper')
+const CRATE_VAN = wagon('crate-van', 'the crate van', '#a8443a', 'box-van')
+const TIMBER = wagon('timber', 'the timber wagon', '#b8862f', 'timber')
 
 function standing(id: string, cars: typeof PILOT[], edge: string, head: number): Train {
   return {
