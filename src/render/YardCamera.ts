@@ -31,7 +31,9 @@ export class YardCamera {
 
     canvas.addEventListener('contextmenu', (e) => e.preventDefault())
     canvas.addEventListener('pointerdown', (e) => {
-      this.dragging = e.button === 2 || e.shiftKey ? 'pan' : 'orbit'
+      // Hold anything down and you slide the camera; drag on its own turns it.
+      const slide = e.button === 2 || e.shiftKey || e.ctrlKey || e.metaKey || e.altKey
+      this.dragging = slide ? 'pan' : 'orbit'
       this.last = { x: e.clientX, y: e.clientY }
       canvas.setPointerCapture(e.pointerId)
     })
