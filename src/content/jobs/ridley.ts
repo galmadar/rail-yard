@@ -27,35 +27,12 @@ export interface JobSetup {
 }
 
 /**
- * Four days at Ridley Wharf. The one thing to learn is the trip up to the
+ * Three days at Ridley Wharf. The one thing to learn is the trip up to the
  * crane road: two changes of direction, so whatever you take up there ends up
  * on the far side of the shunter and can be left behind. Every job leans on
  * that a little harder.
  */
 export const RIDLEY_JOBS: JobSetup[] = [
-  {
-    job: {
-      title: 'Up to the crane',
-      goals: [
-        {
-          vehicleId: 'van',
-          edgeId: 'crane-road',
-          text: 'the box van goes on the crane road: out to the quay, set back down the back road, then forward',
-        },
-        {
-          vehicleId: 'shunter',
-          edgeId: 'headshunt',
-          alone: true,
-          finish: true,
-          text: 'then bring the shunter home to the headshunt, on its own',
-        },
-      ],
-    },
-    layout: () => [
-      standing('player', [SHUNTER], 'headshunt', 34),
-      standing('cut-van', [VAN], 'yard-road', 30),
-    ],
-  },
   {
     job: {
       title: 'Three roads, three wagons',

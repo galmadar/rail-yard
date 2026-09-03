@@ -64,7 +64,10 @@ export class YardCamera {
       (e) => {
         e.preventDefault()
         const far = view.distance * 1.75
-        this.distance = Math.max(18, Math.min(far, this.distance * (1 + Math.sign(e.deltaY) * 0.12)))
+        // Scale by how hard it was scrolled, not per event - a trackpad fires
+        // a stream of tiny ones and a fixed step per event bolts off.
+        const push = Math.max(-60, Math.min(60, e.deltaY))
+        this.distance = Math.max(18, Math.min(far, this.distance * Math.exp(push * 0.0012)))
       },
       { passive: false },
     )

@@ -99,6 +99,10 @@ export function start(
     say(world, on ? 'camera riding with the shunter' : 'camera parked - it stays put')
   })
   bind(keys, 'c', recentre)
+  bind(keys, 'h', () => {
+    const bare = hud.toggleBare()
+    say(world, bare ? 'panels out of the way - H brings them back' : 'panels back')
+  })
   bind(keys, 'n', () => {
     if (world.done) onNext()
     else say(world, 'finish this one first - R starts it over', 'warn')

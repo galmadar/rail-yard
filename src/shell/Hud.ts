@@ -36,6 +36,10 @@ export class Hud {
     this.readout = el('div', 'readout', bottom)
     this.points = el('div', 'points', bottom)
 
+    const bare = el('button', 'pill bare-toggle', this.layer) as HTMLButtonElement
+    bare.textContent = 'Hide the panels (H)'
+    bare.addEventListener('click', () => this.toggleBare())
+
     const back = el('button', 'recentre', this.layer) as HTMLButtonElement
     back.textContent = 'Put the camera back (C)'
     back.addEventListener('click', recentre)
@@ -44,7 +48,16 @@ export class Hud {
     this.done = el('div', 'banner', this.layer)
   }
 
+  /** Clear the panels away for an uninterrupted look at the yard. */
+  toggleBare(): boolean {
+    const bare = document.body.classList.toggle('bare')
+    const button = this.layer.querySelector('.bare-toggle')
+    if (button) button.textContent = bare ? 'Show the panels (H)' : 'Hide the panels (H)'
+    return bare
+  }
+
   destroy(): void {
+    document.body.classList.remove('bare')
     this.layer.remove()
   }
 

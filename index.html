@@ -141,6 +141,30 @@
       }
       .banner.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 
+      .bare-toggle {
+        position: absolute;
+        left: 20px;
+        bottom: 62px;
+        pointer-events: auto;
+        background: var(--panel);
+        border: 1px solid var(--edge);
+        border-radius: 999px;
+        padding: 7px 14px;
+        color: var(--dim);
+        font: inherit;
+        font-size: 13px;
+        cursor: pointer;
+      }
+      .bare-toggle:hover { color: var(--ink); }
+
+      /* Panels out of the way - only the way back stays. */
+      body.bare .panel,
+      body.bare #help,
+      body.bare .notice,
+      body.bare .recentre { display: none; }
+      body.bare .bare-toggle { opacity: 0.45; }
+      body.bare .bare-toggle:hover { opacity: 1; }
+
       #help {
         position: fixed;
         right: 20px;

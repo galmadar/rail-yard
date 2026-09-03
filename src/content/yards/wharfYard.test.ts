@@ -55,19 +55,8 @@ function downFromTheCrane(w: World): void {
 }
 
 describe('working Ridley Wharf through', () => {
-  it('gets one wagon up to the crane and the shunter home', () => {
-    const w = createWharfWorld(0)
-
-    shove(w) // east down the yard road onto the box van
-    upToTheCrane(w) // out to the quay, set back, then forward into the crane road
-    drop(w, 1)
-    downFromTheCrane(w)
-
-    expect(w.done).toBe(true)
-  })
-
   it('deals three wagons out to three different roads', () => {
-    const w = createWharfWorld(1)
+    const w = createWharfWorld(0)
 
     shove(w) // onto the back of the rake
     draw(w) // and the lot out onto the headshunt
@@ -92,7 +81,7 @@ describe('working Ridley Wharf through', () => {
   })
 
   it('makes two trips because the tanker has to go up first', () => {
-    const w = createWharfWorld(2)
+    const w = createWharfWorld(1)
 
     shove(w) // onto the tanker and the box van
     shove(w) // on to the quay for the stone hopper
@@ -129,7 +118,7 @@ describe('working Ridley Wharf through', () => {
   })
 
   it('empties the crane road before it fills it, and leaves the quay till last', () => {
-    const w = createWharfWorld(3)
+    const w = createWharfWorld(2)
 
     shove(w) // onto the flat wagon
     shove(w) // on to the quay for the box van
