@@ -18,8 +18,6 @@ import { markPassed } from './progress'
 
 const MAX_STEP = 1 / 30
 
-/** About seventy degrees off the camera. Nearer than that and left is a guess. */
-
 export interface Game {
   /** Stop the frames, drop the panel and let the old scene go. */
   stop: () => void
@@ -78,7 +76,11 @@ export function start(
   onPick: (index: number) => void,
 ): Game {
   const { renderer, release } = buildRenderer(canvas, world)
-  const hud = new Hud(hudRoot, onPick)
+  const recentre = (): void => {
+    renderer.view.recentre()
+    say(world, 'camera back where the job started')
+  }
+  const hud = new Hud(hudRoot, onPick, recentre)
   const keys = freshKeys()
 
   world.yard.switchOrder.forEach((id, i) => {
@@ -86,14 +88,15 @@ export function start(
   })
   bind(keys, 'u', () => uncouple(world))
   bind(keys, 'enter', () => uncouple(world))
-  bind(keys, 'q', () => moveCut(world, -1))
-  bind(keys, 'e', () => moveCut(world, 1))
+  bind(keys, 'q', () => moveCut(world, pinStep(-1)))
+  bind(keys, 'e', () => moveCut(world, pinStep(1)))
   bind(keys, '[', () => moveCut(world, -1))
   bind(keys, ']', () => moveCut(world, 1))
   bind(keys, 'f', () => {
     const on = renderer.view.toggleFollow()
-    say(world, on ? 'camera riding with the shunter' : 'camera parked')
+    say(world, on ? 'camera riding with the shunter' : 'camera parked - it stays put')
   })
+  bind(keys, 'c', recentre)
   bind(keys, 'n', () => {
     if (world.done) onNext()
     else say(world, 'finish this one first - R starts it over', 'warn')
@@ -121,6 +124,19 @@ export function start(
     return steering.throttle(way, steer, t.speed)
   }
 
+  /**
+   * Q and E are left and right on the screen. Wagons are counted backwards along
+   * the train's path, so a step towards screen-right is a step down the count.
+   */
+  function pinStep(screenward: number): number {
+    const t = playerTrain(world)
+    if (!t) return 0
+    across.setFromMatrixColumn(renderer.view.camera.matrixWorld, 0)
+    const { heading } = frontPose(world.yard, t)
+    const rightward = noseTowardsScreenRight(across.x, across.z, heading, 1)
+    return rightward >= 0 ? -screenward : screenward
+  }
+
   function frame(now: number): void {
     if (!running) return
     const dt = Math.min(MAX_STEP, (now - previous) / 1000)
@@ -133,7 +149,6 @@ export function start(
       brake: keys.down(' ', 'spacebar'),
     }
 
-    if (controls.throttle !== 0) renderer.view.wake()
     tick(world, dt, controls)
     if (world.done) markPassed(world.jobIndex)
     hud.update(world)

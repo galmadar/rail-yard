@@ -92,6 +92,23 @@
       .chip.diverge { background: rgba(216, 164, 23, 0.32); }
       .chip.locked { opacity: 0.45; text-decoration: line-through; }
 
+      .recentre {
+        position: absolute;
+        left: 20px;
+        bottom: 20px;
+        pointer-events: auto;
+        cursor: pointer;
+        font: inherit;
+        font-size: 13px;
+        color: var(--dim);
+        background: var(--panel);
+        border: 1px solid var(--edge);
+        border-radius: 999px;
+        padding: 7px 15px;
+        backdrop-filter: blur(9px);
+      }
+      .recentre:hover { color: var(--ink); background: rgba(255, 255, 255, 0.16); }
+
       .notice {
         position: absolute;
         left: 50%;
@@ -149,9 +166,10 @@
       <b>W</b> / <b>S</b> — drive nose first, back<br />
       <b>Space</b> — brake<br />
       <b>1 2 3</b> — swing the points<br />
-      <b>Q</b> / <b>E</b> — move the pin along the train<br />
+      <b>Q</b> / <b>E</b> — slide the pin left, right<br />
       <b>U</b> — pull the pin, cut off<br />
-      <b>F</b> — park the camera<br />
+      <b>F</b> — ride along with the shunter, or park again<br />
+      <b>C</b> — put the camera back where it started<br />
       <b>N</b> — next job<br />
       <b>R</b> — start this job again<br />
       drag to look · wheel to zoom

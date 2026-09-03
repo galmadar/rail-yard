@@ -1,5 +1,6 @@
 import { ROSTER, bookingAt } from './content/yards/registry'
 import { start, type Game } from './shell/GameLoop'
+import { jobToResume, rememberJob } from './shell/progress'
 
 const hudRoot = document.getElementById('hud') as HTMLElement
 let game: Game | null = null
@@ -28,6 +29,7 @@ function play(index: number): void {
   const world = bookingAt(index).create()
   world.jobIndex = index
   world.jobCount = ROSTER.length
+  rememberJob(index)
 
   // Dev only: lets a test driver read the yard state without a screenshot.
   if (import.meta.env.DEV) (globalThis as Record<string, unknown>).world = world
@@ -45,4 +47,4 @@ function play(index: number): void {
 // Dev only: jump straight to a job instead of working through them.
 if (import.meta.env.DEV) (globalThis as Record<string, unknown>).playJob = play
 
-play(0)
+play(jobToResume(ROSTER.length))

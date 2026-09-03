@@ -22,7 +22,7 @@ export class Hud {
   private points: HTMLElement
   private done: HTMLElement
 
-  constructor(root: HTMLElement, jump: (index: number) => void) {
+  constructor(root: HTMLElement, jump: (index: number) => void, recentre: () => void) {
     this.jump = jump
     // Its own layer, so swapping jobs can take the whole panel away in one go.
     this.layer = el('div', 'hud-layer', root)
@@ -35,6 +35,10 @@ export class Hud {
     const bottom = el('div', 'panel readout-panel', this.layer)
     this.readout = el('div', 'readout', bottom)
     this.points = el('div', 'points', bottom)
+
+    const back = el('button', 'recentre', this.layer) as HTMLButtonElement
+    back.textContent = 'Put the camera back (C)'
+    back.addEventListener('click', recentre)
 
     this.notice = el('div', 'notice', this.layer)
     this.done = el('div', 'banner', this.layer)

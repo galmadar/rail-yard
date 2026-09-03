@@ -4,22 +4,27 @@ import type { YardView } from '../sim/yard'
 /** What a yard gets framed at when it does not ask for anything else. */
 export const DEFAULT_VIEW: YardView = { centre: { x: -20, z: -14 }, distance: 150 }
 
+/** The angle every yard opens at - looking in from the south, well up in the air. */
+const HOME_AZIMUTH = Math.PI / 2
+const HOME_ELEVATION = 1.15
+
 /**
- * Looks down on the yard from behind and above. It holds the whole yard in
- * frame until you first pull away, then rides with the shunter. F parks it.
+ * Looks down on the yard from behind and above. It never moves on its own -
+ * only dragging, the wheel, or F to ride along with the shunter moves it.
  */
 export class YardCamera {
   readonly camera: THREE.PerspectiveCamera
   private target: THREE.Vector3
-  private azimuth = Math.PI / 2
-  private elevation = 1.15
+  private azimuth = HOME_AZIMUTH
+  private elevation = HOME_ELEVATION
   private distance: number
+  private readonly home: YardView
   private dragging: 'orbit' | 'pan' | null = null
   private last = { x: 0, y: 0 }
   follow = false
-  private waiting = true
 
   constructor(canvas: HTMLCanvasElement, view: YardView = DEFAULT_VIEW) {
+    this.home = view
     this.target = new THREE.Vector3(view.centre.x, 0, view.centre.z)
     this.distance = view.distance
     this.camera = new THREE.PerspectiveCamera(48, 1, 0.5, view.distance * 6)
@@ -43,7 +48,6 @@ export class YardCamera {
         this.azimuth -= dx * 0.005
         this.elevation = Math.max(0.18, Math.min(1.45, this.elevation + dy * 0.004))
       } else {
-        this.follow = false
         const scale = this.distance * 0.0016
         const sin = Math.sin(this.azimuth)
         const cos = Math.cos(this.azimuth)
@@ -62,17 +66,18 @@ export class YardCamera {
     )
   }
 
-  toggleFollow(): boolean {
-    this.waiting = false
-    this.follow = !this.follow
-    return this.follow
+  /** Undoes every drag, spin and zoom - back to the view the job opened at. */
+  recentre(): void {
+    this.target.set(this.home.centre.x, 0, this.home.centre.z)
+    this.azimuth = HOME_AZIMUTH
+    this.elevation = HOME_ELEVATION
+    this.distance = this.home.distance
+    this.follow = false
   }
 
-  /** First time the driver opens up, stop showing the yard and go with them. */
-  wake(): void {
-    if (!this.waiting) return
-    this.waiting = false
-    this.follow = true
+  toggleFollow(): boolean {
+    this.follow = !this.follow
+    return this.follow
   }
 
   update(locoAt: { x: number; z: number } | null, dt: number): void {
