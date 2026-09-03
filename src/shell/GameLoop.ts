@@ -13,12 +13,12 @@ import {
 } from '../sim/World'
 import { Keyboard } from '../input/Keyboard'
 import { Hud } from './Hud'
+import { Steering, noseTowardsScreenRight } from './steering'
 import { markPassed } from './progress'
 
 const MAX_STEP = 1 / 30
 
 /** About seventy degrees off the camera. Nearer than that and left is a guess. */
-const CLEAR_ENOUGH = 0.35
 
 export interface Game {
   /** Stop the frames, drop the panel and let the old scene go. */
@@ -105,29 +105,20 @@ export function start(
   let running = true
 
   const across = new THREE.Vector3()
-  // +1 means driving nose-first carries the train right across the screen.
-  // It is remembered rather than read fresh, because a train running straight
-  // at the camera flips it on the smallest nudge of the mouse.
-  let noseIsRight = 1
+  const steering = new Steering()
 
   /**
-   * Which way to open the regulator for the Right arrow. The player is asking
-   * for right on the screen in front of him, and he can swing the camera round
-   * the yard, so it can only come from where the camera is standing now.
+   * Which way to open the regulator for the Right arrow. He is asking for right
+   * on the screen in front of him, and he can swing the camera round the yard,
+   * so it can only come from where the camera is standing now.
    */
   function steerThrottle(steer: number): number {
     const t = playerTrain(world)
     if (!t) return 0
     across.setFromMatrixColumn(renderer.view.camera.matrixWorld, 0)
     const { heading } = frontPose(world.yard, t)
-    const sideways = across.x * Math.cos(heading) + across.z * Math.sin(heading)
-    const way = sideways * noseWay(t)
-    // Re-read it only when the answer is plain, or when the train is standing
-    // and nobody is steering. A control that reverses mid-shove is worse than
-    // one that points the wrong way.
-    const settled = steer === 0 && Math.abs(t.speed) < 0.05
-    if (Math.abs(way) >= CLEAR_ENOUGH || (settled && way !== 0)) noseIsRight = way > 0 ? 1 : -1
-    return steer * noseIsRight
+    const way = noseTowardsScreenRight(across.x, across.z, heading, noseWay(t))
+    return steering.throttle(way, steer, t.speed)
   }
 
   function frame(now: number): void {
@@ -142,6 +133,7 @@ export function start(
       brake: keys.down(' ', 'spacebar'),
     }
 
+    if (controls.throttle !== 0) renderer.view.wake()
     tick(world, dt, controls)
     if (world.done) markPassed(world.jobIndex)
     hud.update(world)

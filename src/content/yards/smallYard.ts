@@ -111,6 +111,7 @@ function buildYard(): Yard {
     nodes: new Map(nodes.map((n) => [n.id, n])),
     edges: new Map(edges.map((e) => [e.id, e])),
     switchOrder: ['point-1', 'point-2', 'point-3'],
+    view: { centre: { x: -2, z: -19 }, distance: 146 },
     signs: [
       { edge: 'headshunt', at: 0.35 },
       { edge: 'spare', at: 0.45 },

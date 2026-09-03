@@ -5,18 +5,19 @@ import type { YardView } from '../sim/yard'
 export const DEFAULT_VIEW: YardView = { centre: { x: -20, z: -14 }, distance: 150 }
 
 /**
- * Looks down on the yard from behind and above. It rides with the shunter by
- * default; press F and it stays put so you can look over the whole job.
+ * Looks down on the yard from behind and above. It holds the whole yard in
+ * frame until you first pull away, then rides with the shunter. F parks it.
  */
 export class YardCamera {
   readonly camera: THREE.PerspectiveCamera
   private target: THREE.Vector3
   private azimuth = Math.PI / 2
-  private elevation = 0.78
+  private elevation = 1.15
   private distance: number
   private dragging: 'orbit' | 'pan' | null = null
   private last = { x: 0, y: 0 }
-  follow = true
+  follow = false
+  private waiting = true
 
   constructor(canvas: HTMLCanvasElement, view: YardView = DEFAULT_VIEW) {
     this.target = new THREE.Vector3(view.centre.x, 0, view.centre.z)
@@ -62,8 +63,16 @@ export class YardCamera {
   }
 
   toggleFollow(): boolean {
+    this.waiting = false
     this.follow = !this.follow
     return this.follow
+  }
+
+  /** First time the driver opens up, stop showing the yard and go with them. */
+  wake(): void {
+    if (!this.waiting) return
+    this.waiting = false
+    this.follow = true
   }
 
   update(locoAt: { x: number; z: number } | null, dt: number): void {
