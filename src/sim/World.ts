@@ -20,7 +20,12 @@ import { throwSwitch, type NodeId, type Yard } from './yard'
 export interface Goal {
   vehicleId: string
   edgeId: string
-  /** Where in the line it stands: 1 nearest the dead end, 2 behind it, and so on. */
+  /**
+   * Where in the line it stands, counted from the buffer stop: 1 sits at the
+   * buffer stop end, 2 next to it on the points side, and so on. Word the goal
+   * the same way - never "behind" or "in front", which only mean something if
+   * you already know which way the train came in.
+   */
   order?: number
   /** Nothing may be coupled to it - how the shunter finishes on its own. */
   alone?: boolean
@@ -199,7 +204,7 @@ function reportBlock(w: World, blocked: Blocked, driven: boolean): void {
   }
 }
 
-/** How far a car stands from the dead end of its own road - what "behind" means. */
+/** How far a car stands from the buffer stop end of its road - what `order` counts. */
 function fromStop(y: Yard, t: Train, i: number): number {
   const span = carSpan(t, i)
   let remaining = (span.front + span.back) / 2
