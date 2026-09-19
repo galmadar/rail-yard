@@ -17,13 +17,14 @@ in plain words.
 
 # The one rule that keeps the game changeable
 
-`src/sim/` and `src/content/` must never import `three`. The game logic knows
-about track, wagons and couplings; it knows nothing about how they are drawn.
-`npm test` fails if that ever stops being true.
+`src/sim/` and `src/content/` must never import `three` or touch the browser.
+The game logic knows about track, wagons and couplings; it knows nothing about
+how they are drawn.
 
-The check only catches `from 'three'` and `require('three')` in `.ts`/`.tsx`
-files, and skips `*.view.ts`: a bare `import 'three'`, `import('three')` or a
-`three/...` subpath gets through.
+`npm test` enforces it via `scripts/check-sim-purity.mjs`: every JS/TS file in
+those folders fails on any import of `three` or `three/...` (static, bare,
+dynamic, `require`) and on `document.`, `window.` or `navigator.`. Comments are
+ignored. No file is exempt; drawing code belongs in `src/render/`.
 
 # Shipping
 
