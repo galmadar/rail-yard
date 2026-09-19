@@ -20,3 +20,17 @@ in plain words.
 `src/sim/` and `src/content/` must never import `three`. The game logic knows
 about track, wagons and couplings; it knows nothing about how they are drawn.
 `npm test` fails if that ever stops being true.
+
+The check only catches `from 'three'` and `require('three')` in `.ts`/`.tsx`
+files, and skips `*.view.ts`: a bare `import 'three'`, `import('three')` or a
+`three/...` subpath gets through.
+
+# Shipping
+
+Live at https://rail-yard.vercel.app.
+Repo `galmadar/rail-yard`. Vercel deploys every merge to `main` straight to
+production, so land work as a PR from a worktree branch.
+
+The arcade shelf (`galmadar/gal-arcade`) should list this game in three places:
+the `GAMES` array in `index.html`, and the request-form lists in
+`requests.html` and `api/_db.js`. A new or renamed game needs all three.
