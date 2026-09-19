@@ -1,7 +1,5 @@
 # Rail Yard — what it is
 
-_Draft for Gal to approve._
-
 ## What this toy is
 
 You drive one little shunting engine around a goods yard, set the points, and
