@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test": "node scripts/check-sim-purity.mjs && vitest run",
     "test:watch": "vitest",
-    "check:purity": "node scripts/check-sim-purity.mjs"
+    "check:purity": "node scripts/check-sim-purity.mjs",
+    "feel:snapshot": "vite-node scripts/feel-snapshot.ts"
   },
   "dependencies": {
     "three": "^0.180.0"

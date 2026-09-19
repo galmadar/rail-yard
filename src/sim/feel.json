@@ -1,0 +1,51 @@
+{
+  "topSpeed": {
+    "label": "top speed of the shunter",
+    "value": 100.08,
+    "unit": "km/h",
+    "tolerance": 0.05,
+    "kind": "measured"
+  },
+  "secondsToTopSpeed": {
+    "label": "time to reach top speed from a stand, flat out",
+    "value": 1.467,
+    "unit": "s",
+    "tolerance": 0.05,
+    "kind": "measured"
+  },
+  "stoppingDistance": {
+    "label": "stopping distance from full speed, brake held",
+    "value": 11.844,
+    "unit": "m",
+    "tolerance": 0.05,
+    "kind": "measured"
+  },
+  "coastingDistance": {
+    "label": "how far the shunter rolls from full speed when you let go of everything",
+    "value": 77.053,
+    "unit": "m",
+    "tolerance": 0.05,
+    "kind": "measured"
+  },
+  "kickedWagonRun": {
+    "label": "how far a wagon runs on its own after being kicked off at 36 km/h",
+    "value": 138.806,
+    "unit": "m",
+    "tolerance": 0.05,
+    "kind": "measured"
+  },
+  "gentleCouplingLimit": {
+    "label": "fastest you can buffer up and still get \"coupled up\", not \"a thump\"",
+    "value": 18,
+    "unit": "km/h",
+    "tolerance": 0.05,
+    "kind": "measured"
+  },
+  "couplingReach": {
+    "label": "how close the buffers must get before they hook on",
+    "value": 1.4,
+    "unit": "m",
+    "tolerance": 0.05,
+    "kind": "constant"
+  }
+}
